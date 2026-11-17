@@ -3,427 +3,627 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bancos para sentar</title>
+  <title>BenchMarks</title>
   <link rel="icon" type="image/png" href="/favicon.png?v=1">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <style>
+    .hour-bar { height: 2.25rem; }
+    dialog::backdrop { background: rgb(15 23 42 / .55); }
+  </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
-  <div id="app" class="max-w-6xl mx-auto px-4 py-8">
-    <!-- Login -->
-    <section id="loginView" class="min-h-screen flex items-center justify-center px-4 py-10">
-      <div class="w-full max-w-md">
-        <div class="text-center mb-8">
-          <div class="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 14h16"></path>
-              <path d="M6 14V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6"></path>
-              <path d="M6 14v4"></path>
-              <path d="M18 14v4"></path>
-            </svg>
-          </div>
-          <h1 class="text-4xl font-extrabold tracking-tight mt-5 bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">BenchMarks</h1>
-          <p class="text-slate-500 mt-2">Descubre, valora y comparte los mejores bancos</p>
-        </div>
 
-        <div class="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/40">
-          <div class="flex mb-6 rounded-xl bg-slate-100 p-1">
-            <button type="button" id="tabLogin" class="flex-1 py-2 rounded-lg text-sm font-medium bg-white shadow text-slate-900">Iniciar sesión</button>
-            <button type="button" id="tabRegister" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500">Crear cuenta</button>
-          </div>
-
-          <form id="loginForm" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Usuario</label>
-              <input id="username" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="userID" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Contrasinal</label>
-              <input id="password" type="password" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="••••••••" required>
-            </div>
-            <button class="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition">Entrar</button>
-          </form>
-
-          <form id="registerForm" class="space-y-4 hidden">
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Usuario</label>
-              <input id="rUsername" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="userID" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Nome</label>
-              <input id="rName" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="O teu nome" required>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Contrasinal</label>
-              <input id="rPassword" type="password" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" placeholder="••••••••" required>
-            </div>
-            <button class="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition">Crear conta</button>
-          </form>
-
-          <div id="loginMsg" class="mt-4 text-sm text-red-600"></div>
-        </div>
+<!-- ============ Login / rexistro ============ -->
+<section id="loginView" class="min-h-screen flex items-center justify-center px-4 py-10 hidden">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-indigo-600 flex items-center justify-center shadow-2xl">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 14h16"></path><path d="M6 14V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v6"></path><path d="M6 14v4"></path><path d="M18 14v4"></path>
+        </svg>
       </div>
-    </section>
+      <h1 class="text-4xl font-extrabold tracking-tight mt-5 bg-gradient-to-r from-emerald-500 to-indigo-600 bg-clip-text text-transparent">BenchMarks</h1>
+      <p class="text-slate-500 mt-2">Descobre, valora e comparte os mellores bancos</p>
+    </div>
 
-    <!-- App -->
-    <section id="appView" class="hidden">
-      <header class="flex items-center justify-between mb-6">
-        <div>
-          <h1 class="text-3xl font-bold">Bancos para sentar</h1>
-          <p class="text-slate-500" id="whoami"></p>
-        </div>
-        <button id="logoutBtn" class="bg-slate-800 text-white px-4 py-2 rounded hover:bg-black">Pechar sesión</button>
-      </header>
-
-      <nav class="flex gap-2 mb-6">
-        <button class="tabBtn bg-blue-600 text-white px-4 py-2 rounded" data-tab="benches">Bancos</button>
-        <button class="tabBtn bg-slate-200 px-4 py-2 rounded" data-tab="favorites">Favoritos ⭐</button>
-        <button class="tabBtn bg-slate-200 px-4 py-2 rounded" data-tab="photos">Fotos</button>
-        <button class="tabBtn bg-slate-200 px-4 py-2 rounded" data-tab="reviews">Valoracións</button>
-        <button class="tabBtn bg-slate-200 px-4 py-2 rounded" data-tab="profile">Perfil</button>
-      </nav>
-
-      <!-- Benches -->
-      <div id="benchesTab" class="tabContent space-y-4">
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Engadir banco</h2>
-          <form id="benchForm" class="flex flex-wrap gap-2">
-            <input id="benchCords" class="border rounded px-3 py-2 flex-1" placeholder="Coordenadas (lat,lon)" required>
-            <input id="benchType" class="border rounded px-3 py-2 flex-1" placeholder="Tipo" required>
-            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Engadir</button>
-          </form>
-        </div>
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Listado (ordenado por likes)</h2>
-          <div id="benchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-      </div>
-      <!-- Favorites Tab -->
-      <div id="favoritesTab" class="tabContent hidden space-y-4">
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Os meus bancos favoritos ⭐</h2>
-          <div id="favoriteGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        </div>
-      </div>
-      <!-- Photos -->
-      <div id="photosTab" class="tabContent hidden space-y-4">
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Engadir foto (metadatos)</h2>
-          <form id="photoForm" class="flex flex-wrap gap-2">
-            <input id="photoRes" class="border rounded px-3 py-2 flex-1" placeholder="Resolución" required>
-            <input id="photoSize" type="number" class="border rounded px-3 py-2 flex-1" placeholder="Tamaño (bytes)" required>
-            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Engadir</button>
-          </form>
-        </div>
-        <div class="bg-white shadow rounded-xl p-4">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50"><tr><th class="p-2">Img</th><th class="text-left p-2">ID</th><th class="text-left p-2">Resolución</th><th class="text-left p-2">Tamaño</th><th class="p-2"></th></tr></thead>
-            <tbody id="photoTable"></tbody>
-          </table>
-        </div>
+    <div class="bg-white rounded-3xl shadow-2xl p-8">
+      <div class="flex mb-6 rounded-xl bg-slate-100 p-1" role="tablist">
+        <button type="button" id="tabLogin" class="flex-1 py-2 rounded-lg text-sm font-medium bg-white shadow text-slate-900">Iniciar sesión</button>
+        <button type="button" id="tabRegister" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500">Crear conta</button>
       </div>
 
-      <!-- Reviews -->
-      <div id="reviewsTab" class="tabContent hidden space-y-4">
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Nova valoración</h2>
-          <form id="reviewForm" class="grid grid-cols-1 md:grid-cols-3 gap-2">
-            <select id="reviewBench" class="border rounded px-3 py-2"></select>
-            <input id="reviewMark" type="number" min="0" max="10" class="border rounded px-3 py-2" placeholder="Nota (0-10)" required>
-            <input id="reviewNote" class="border rounded px-3 py-2" placeholder="Comentario">
-            <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 md:col-span-3">Enviar</button>
-          </form>
-        </div>
-        <div class="bg-white shadow rounded-xl p-4">
-          <table class="w-full text-sm">
-            <thead class="bg-slate-50"><tr><th class="text-left p-2">ID</th><th class="text-left p-2">Banco</th><th class="text-left p-2">Nota</th><th class="text-left p-2">Comentario</th><th class="p-2"></th></tr></thead>
-            <tbody id="reviewTable"></tbody>
-          </table>
-        </div>
-      </div>
+      <form id="loginForm" class="space-y-4">
+        <label class="block"><span class="block text-sm font-medium text-slate-600 mb-1">Usuario</span>
+          <input id="username" autocomplete="username" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" required></label>
+        <label class="block"><span class="block text-sm font-medium text-slate-600 mb-1">Contrasinal</span>
+          <input id="password" type="password" autocomplete="current-password" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" required></label>
+        <button class="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition">Entrar</button>
+        <p class="text-xs text-slate-400 text-center">Usuarios de proba: user, ana, brais, admin (contrasinal 1234)</p>
+      </form>
 
-      <!-- Profile -->
-      <div id="profileTab" class="tabContent hidden space-y-4">
-        <div class="bg-white shadow rounded-xl p-4">
-          <h2 class="font-semibold mb-3">Editar perfil</h2>
-          <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <input id="pName" class="border rounded px-3 py-2" placeholder="Nome">
-            <input id="pLast" class="border rounded px-3 py-2" placeholder="Apelidos">
-            <input id="pNick" class="border rounded px-3 py-2" placeholder="Nickname">
-            <input id="pLocation" class="border rounded px-3 py-2" placeholder="Localización">
-            <input id="pPassword" type="password" class="border rounded px-3 py-2" placeholder="Nova contrasinal (opcional)">
-            <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Gardar</button>
-          </form>
-          <div id="profileMsg" class="mt-2 text-sm"></div>
-        </div>
-      </div>
+      <form id="registerForm" class="space-y-4 hidden">
+        <label class="block"><span class="block text-sm font-medium text-slate-600 mb-1">Usuario</span>
+          <input id="rUsername" autocomplete="username" pattern="[a-zA-Z0-9_.\-]{3,30}" title="Entre 3 e 30 letras, números, '.', '_' ou '-'" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" required></label>
+        <label class="block"><span class="block text-sm font-medium text-slate-600 mb-1">Nome</span>
+          <input id="rName" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" required></label>
+        <label class="block"><span class="block text-sm font-medium text-slate-600 mb-1">Contrasinal</span>
+          <input id="rPassword" type="password" minlength="4" autocomplete="new-password" class="w-full border rounded-xl px-4 py-3 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-400 outline-none" required></label>
+        <button class="w-full bg-gradient-to-r from-emerald-500 to-indigo-600 text-white rounded-xl py-3 font-semibold hover:opacity-90 transition">Crear conta</button>
+      </form>
 
-      <div id="msg" class="mt-4 text-sm text-red-600"></div>
-    </section>
+      <div id="loginMsg" class="mt-4 text-sm text-red-600" role="alert"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Aplicación ============ -->
+<section id="appView" class="hidden max-w-6xl mx-auto px-4 py-6">
+  <header class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div class="flex items-center gap-3">
+      <img src="/favicon.png" alt="" class="w-10 h-10 rounded-xl">
+      <div>
+        <h1 class="text-2xl font-bold">BenchMarks</h1>
+        <p class="text-slate-500 text-sm" id="whoami"></p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <a href="/docs/swagger" target="_blank" class="px-3 py-2 rounded-lg bg-white shadow text-sm hover:bg-slate-50">API docs</a>
+      <button id="logoutBtn" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-black">Pechar sesión</button>
+    </div>
+  </header>
+
+  <nav class="flex flex-wrap gap-2 mb-6" role="tablist">
+    <button class="tabBtn" data-tab="explore">Explorar</button>
+    <button class="tabBtn" data-tab="favorites">Gardados ⭐</button>
+    <button class="tabBtn" data-tab="likes">Gústanme ❤</button>
+    <button class="tabBtn" data-tab="activity">Actividade</button>
+    <button class="tabBtn" data-tab="profile">Perfil</button>
+  </nav>
+
+  <!-- Explorar -->
+  <div id="exploreTab" class="tabContent space-y-4">
+    <form id="searchForm" class="bg-white shadow rounded-xl p-4 grid grid-cols-2 md:grid-cols-6 gap-2 items-end">
+      <label class="col-span-2"><span class="text-xs text-slate-500">Buscar</span>
+        <input id="sQ" class="w-full border rounded px-3 py-2" placeholder="nome, descrición, tipo..."></label>
+      <label><span class="text-xs text-slate-500">Tipo</span>
+        <select id="sType" class="w-full border rounded px-3 py-2">
+          <option value="">Calquera</option><option>Wooden</option><option>Stone</option><option>Metal</option><option>Concrete</option>
+        </select></label>
+      <label><span class="text-xs text-slate-500">Nota mínima</span>
+        <input id="sMin" type="number" min="0" max="10" step="0.5" class="w-full border rounded px-3 py-2"></label>
+      <label><span class="text-xs text-slate-500">Cuberto</span>
+        <select id="sCovered" class="w-full border rounded px-3 py-2"><option value="">Indiferente</option><option value="true">Si</option><option value="false">Non</option></select></label>
+      <label><span class="text-xs text-slate-500">Ordenar</span>
+        <select id="sSort" class="w-full border rounded px-3 py-2">
+          <option value="averageMark,desc">Mellor valorados</option><option value="likes,desc">Máis likes</option>
+          <option value="createdAt,desc">Máis recentes</option><option value="name,asc">Nome</option>
+        </select></label>
+      <label class="col-span-2 md:col-span-2 flex items-center gap-2 text-sm"><input id="sNear" type="checkbox"> Preto de min (radio <input id="sRadius" type="number" value="1" min="0.1" max="50" step="0.1" class="w-16 border rounded px-1"> km)</label>
+      <div class="col-span-2 md:col-span-4 flex gap-2 justify-end">
+        <button type="button" id="newBenchBtn" class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">+ Novo banco</button>
+        <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Buscar</button>
+      </div>
+    </form>
+    <div id="benchGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    <div id="pager" class="flex justify-center gap-2"></div>
   </div>
 
+  <div id="favoritesTab" class="tabContent hidden">
+    <div id="favoriteGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+  <div id="likesTab" class="tabContent hidden">
+    <div id="likeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </div>
+
+  <div id="activityTab" class="tabContent hidden">
+    <div class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-3">Últimas valoracións</h2>
+      <ul id="activityList" class="divide-y"></ul>
+    </div>
+  </div>
+
+  <div id="profileTab" class="tabContent hidden space-y-4">
+    <div class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-3">O meu perfil</h2>
+      <form id="profileForm" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <label><span class="text-xs text-slate-500">Nome</span><input id="pName" class="w-full border rounded px-3 py-2"></label>
+        <label><span class="text-xs text-slate-500">Apelidos</span><input id="pLast" class="w-full border rounded px-3 py-2"></label>
+        <label><span class="text-xs text-slate-500">Alcume</span><input id="pNick" class="w-full border rounded px-3 py-2"></label>
+        <label><span class="text-xs text-slate-500">Localización</span><input id="pLocation" class="w-full border rounded px-3 py-2"></label>
+        <label><span class="text-xs text-slate-500">Data de nacemento</span><input id="pBirthday" type="date" class="w-full border rounded px-3 py-2"></label>
+        <label><span class="text-xs text-slate-500">Novo contrasinal (opcional)</span><input id="pPassword" type="password" minlength="4" autocomplete="new-password" class="w-full border rounded px-3 py-2"></label>
+        <div class="md:col-span-2 flex justify-between">
+          <button type="button" id="deleteAccountBtn" class="text-red-600 text-sm hover:underline">Borrar a miña conta</button>
+          <button class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Gardar</button>
+        </div>
+      </form>
+    </div>
+    <div class="bg-white shadow rounded-xl p-4">
+      <h2 class="font-semibold mb-3">As miñas valoracións</h2>
+      <ul id="myReviews" class="divide-y"></ul>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 max-w-sm hidden px-4 py-3 rounded-lg shadow-lg text-sm" role="status"></div>
+</section>
+
+<!-- ============ Ficha dun banco ============ -->
+<dialog id="benchDialog" class="w-full max-w-4xl rounded-2xl p-0 shadow-2xl">
+  <div class="p-5 space-y-5">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 id="dName" class="text-2xl font-bold"></h2>
+        <p id="dMeta" class="text-sm text-slate-500"></p>
+        <p id="dDesc" class="mt-1"></p>
+      </div>
+      <button id="dClose" class="text-2xl leading-none text-slate-400 hover:text-slate-700" aria-label="Pechar">×</button>
+    </div>
+    <div id="dOwnerActions" class="flex gap-2 hidden">
+      <button id="dEdit" class="px-3 py-1 rounded bg-slate-200 text-sm hover:bg-slate-300">Editar</button>
+      <button id="dDelete" class="px-3 py-1 rounded bg-red-100 text-red-700 text-sm hover:bg-red-200">Borrar banco</button>
+    </div>
+
+    <section>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold">Fotos</h3>
+        <label class="text-sm bg-emerald-600 text-white px-3 py-1 rounded cursor-pointer hover:bg-emerald-700">Subir foto
+          <input id="dPhotoInput" type="file" accept="image/jpeg,image/png" class="hidden"></label>
+      </div>
+      <div id="dPhotos" class="flex gap-2 overflow-x-auto pb-2"></div>
+    </section>
+
+    <section class="bg-amber-50 rounded-xl p-4">
+      <h3 class="font-semibold mb-2">Terá sombra?</h3>
+      <form id="shadeForm" class="flex flex-wrap gap-2 items-end text-sm">
+        <label>Día <input id="shDate" type="date" class="border rounded px-2 py-1"></label>
+        <label>De <input id="shFrom" type="number" min="0" max="23" value="8" class="w-16 border rounded px-2 py-1"> h</label>
+        <label>a <input id="shTo" type="number" min="0" max="23" value="20" class="w-16 border rounded px-2 py-1"> h</label>
+        <button class="bg-amber-500 text-white px-3 py-1 rounded hover:bg-amber-600">Consultar</button>
+      </form>
+      <div id="shadeResult" class="mt-3"></div>
+    </section>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      <section>
+        <h3 class="font-semibold mb-2">Valoracións</h3>
+        <form id="reviewForm" class="flex gap-2 mb-3">
+          <input id="rvMark" type="number" min="0" max="10" required class="w-20 border rounded px-2 py-1" placeholder="0-10" aria-label="Nota">
+          <input id="rvNote" class="flex-1 border rounded px-2 py-1" placeholder="A túa reseña" aria-label="Reseña">
+          <button class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Valorar</button>
+        </form>
+        <ul id="dReviews" class="divide-y text-sm max-h-72 overflow-y-auto"></ul>
+      </section>
+      <section>
+        <h3 class="font-semibold mb-2">Comentarios</h3>
+        <form id="commentForm" class="flex gap-2 mb-3">
+          <input id="cmText" required maxlength="1000" class="flex-1 border rounded px-2 py-1" placeholder="Escribe un comentario" aria-label="Comentario">
+          <button class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">Enviar</button>
+        </form>
+        <ul id="dComments" class="divide-y text-sm max-h-72 overflow-y-auto"></ul>
+      </section>
+    </div>
+  </div>
+</dialog>
+
+<!-- ============ Alta / edición de banco ============ -->
+<dialog id="benchFormDialog" class="w-full max-w-lg rounded-2xl p-0 shadow-2xl">
+  <form id="benchForm" class="p-5 space-y-3">
+    <h2 id="bfTitle" class="text-xl font-bold">Novo banco</h2>
+    <label class="block"><span class="text-xs text-slate-500">Nome</span><input id="bfName" required maxlength="100" class="w-full border rounded px-3 py-2"></label>
+    <label class="block"><span class="text-xs text-slate-500">Descrición</span><textarea id="bfDesc" maxlength="1000" class="w-full border rounded px-3 py-2"></textarea></label>
+    <div class="grid grid-cols-2 gap-2">
+      <label><span class="text-xs text-slate-500">Latitude</span><input id="bfLat" type="number" step="any" min="-90" max="90" required class="w-full border rounded px-3 py-2"></label>
+      <label><span class="text-xs text-slate-500">Lonxitude</span><input id="bfLon" type="number" step="any" min="-180" max="180" required class="w-full border rounded px-3 py-2"></label>
+    </div>
+    <button type="button" id="bfLocate" class="text-sm text-indigo-600 hover:underline">📍 Usar a miña localización</button>
+    <div class="grid grid-cols-2 gap-2">
+      <label><span class="text-xs text-slate-500">Tipo</span>
+        <select id="bfType" class="w-full border rounded px-3 py-2"><option>Wooden</option><option>Stone</option><option>Metal</option><option>Concrete</option></select></label>
+      <label class="flex items-center gap-2 mt-5"><input id="bfCovered" type="checkbox"> Cuberto (sempre á sombra)</label>
+    </div>
+    <div id="bfMsg" class="text-sm text-red-600"></div>
+    <div class="flex justify-end gap-2">
+      <button type="button" id="bfCancel" class="px-4 py-2 rounded bg-slate-200">Cancelar</button>
+      <button class="px-4 py-2 rounded bg-emerald-600 text-white">Gardar</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
-const API = '';
-function token(){ return localStorage.getItem('token'); }
-function setToken(t){ localStorage.setItem('token', t); }
-function clearToken(){ localStorage.removeItem('token'); }
-async function api(path, options={}){
-  const headers = Object.assign({'Content-Type':'application/json'}, options.headers||{});
-  if(token()) headers.Authorization = 'Bearer '+token();
-  const r = await fetch(API+path, Object.assign(options,{headers}));
-  if(!r.ok){
-    let txt=''; try{txt=await r.text();}catch(e){}
-    throw new Error(txt||('HTTP '+r.status));
+// ---------- Estado e utilidades ----------
+const state = { user: null, admin: false, page: 0, current: null, editing: null };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const token = () => localStorage.getItem('token');
+const setToken = t => localStorage.setItem('token', t);
+const clearToken = () => localStorage.removeItem('token');
+const claims = () => { try { return JSON.parse(atob(token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); } catch { return null; } };
+
+function toast(text, ok = false) {
+  const t = $('toast');
+  t.textContent = text;
+  t.className = 'fixed bottom-4 right-4 max-w-sm px-4 py-3 rounded-lg shadow-lg text-sm ' + (ok ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white');
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.add('hidden'), 3500);
+}
+
+/** Converte un Problem Detail (RFC 9457) nunha mensaxe lexible. */
+async function problemMessage(r) {
+  try {
+    const p = await r.json();
+    if (p.errors) return Object.entries(p.errors).map(([k, v]) => `${k}: ${v}`).join(' · ');
+    return p.detail || p.title || ('HTTP ' + r.status);
+  } catch { return 'HTTP ' + r.status; }
+}
+
+async function refreshToken() {
+  const r = await fetch('/auth/refresh', { method: 'POST', credentials: 'same-origin' });
+  if (!r.ok) return false;
+  setToken(r.headers.get('Authorization').replace(/^Bearer /i, ''));
+  return true;
+}
+
+/** Cliente da API: engade o JWT, renova o token unha vez se caduca e lanza Error co detalle do problema. */
+async function api(path, { method = 'GET', body, patch, form, retry = true } = {}) {
+  const headers = {};
+  if (token()) headers.Authorization = 'Bearer ' + token();
+  let payload;
+  if (form) payload = form;
+  else if (patch) { headers['Content-Type'] = 'application/json-patch+json'; payload = JSON.stringify(patch); }
+  else if (body !== undefined) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
+  const r = await fetch(path, { method, headers, body: payload, credentials: 'same-origin' });
+  if (r.status === 401 && retry && await refreshToken()) return api(path, { method, body, patch, form, retry: false });
+  if (r.status === 401) { clearToken(); showLogin(); throw new Error('A sesión caducou'); }
+  if (!r.ok) throw new Error(await problemMessage(r));
+  if (r.status === 204) return null;
+  return r.json();
+}
+const embedded = (data, rel) => (data && data._embedded && data._embedded[rel]) || [];
+
+// ---------- Login e rexistro ----------
+function switchAuthTab(login) {
+  $('loginForm').classList.toggle('hidden', !login);
+  $('registerForm').classList.toggle('hidden', login);
+  $('tabLogin').className = 'flex-1 py-2 rounded-lg text-sm font-medium ' + (login ? 'bg-white shadow text-slate-900' : 'text-slate-500');
+  $('tabRegister').className = 'flex-1 py-2 rounded-lg text-sm font-medium ' + (!login ? 'bg-white shadow text-slate-900' : 'text-slate-500');
+  $('loginMsg').textContent = '';
+}
+$('tabLogin').onclick = () => switchAuthTab(true);
+$('tabRegister').onclick = () => switchAuthTab(false);
+
+async function doLogin(username, password) {
+  clearToken();
+  const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }), credentials: 'same-origin' });
+  if (!r.ok) throw new Error(await problemMessage(r));
+  setToken(r.headers.get('Authorization').replace(/^Bearer /i, ''));
+  showApp();
+}
+$('loginForm').onsubmit = async e => {
+  e.preventDefault();
+  try { await doLogin($('username').value.trim(), $('password').value); } catch (err) { $('loginMsg').textContent = err.message; }
+};
+$('registerForm').onsubmit = async e => {
+  e.preventDefault();
+  const user = { userID: $('rUsername').value.trim(), name: $('rName').value.trim(), password: $('rPassword').value };
+  try {
+    const r = await fetch('/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(user) });
+    if (!r.ok) throw new Error(await problemMessage(r));
+    await doLogin(user.userID, user.password);
+  } catch (err) { $('loginMsg').textContent = err.message; }
+};
+$('logoutBtn').onclick = async () => { try { await api('/auth/logout', { method: 'POST', retry: false }); } catch {} clearToken(); showLogin(); };
+
+function showLogin() { $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden'); }
+function showApp() {
+  const c = claims();
+  state.user = c.sub;
+  state.admin = (c.roles || []).includes('ROLE_ADMIN');
+  $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+  $('whoami').textContent = '@' + state.user + (state.admin ? ' · administrador' : '');
+  selectTab('explore');
+}
+
+// ---------- Pestanas ----------
+function selectTab(tab) {
+  document.querySelectorAll('.tabBtn').forEach(b => b.className = 'tabBtn px-4 py-2 rounded-lg text-sm ' + (b.dataset.tab === tab ? 'bg-indigo-600 text-white' : 'bg-white shadow hover:bg-slate-50'));
+  document.querySelectorAll('.tabContent').forEach(c => c.classList.add('hidden'));
+  $(tab + 'Tab').classList.remove('hidden');
+  ({ explore: () => loadBenches(), favorites: () => loadUserBenches('favorites', 'favoriteGrid'), likes: () => loadUserBenches('likes', 'likeGrid'),
+     activity: loadActivity, profile: loadProfile })[tab]().catch(err => toast(err.message));
+}
+document.querySelectorAll('.tabBtn').forEach(b => b.onclick = () => selectTab(b.dataset.tab));
+
+// ---------- Bancos ----------
+let myFavorites = new Set(), myLikes = new Set();
+async function loadMySets() {
+  const [f, l] = await Promise.all([api(`/users/${state.user}/favorites?size=100`), api(`/users/${state.user}/likes?size=100`)]);
+  myFavorites = new Set(embedded(f, 'benches').map(b => b.benchID));
+  myLikes = new Set(embedded(l, 'benches').map(b => b.benchID));
+}
+
+const stars = m => m == null ? '<span class="text-slate-400">sen valorar</span>' : `<span class="font-semibold text-amber-600">★ ${m.toFixed(1)}</span>`;
+
+function benchCard(b) {
+  const card = document.createElement('article');
+  card.className = 'bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition cursor-pointer';
+  card.innerHTML = `
+    <div class="h-44 bg-slate-200"><img class="w-full h-44 object-cover hidden" alt="Foto de ${esc(b.name)}"></div>
+    <div class="p-3 space-y-2">
+      <div class="flex items-start justify-between gap-2">
+        <h3 class="font-semibold leading-tight">${esc(b.name)}</h3>${stars(b.averageMark)}
+      </div>
+      <p class="text-xs text-slate-500">${esc(b.type)}${b.covered ? ' · cuberto' : ''} · ${b.reviewCount} valoracións</p>
+      <div class="flex gap-2">
+        <button class="likeBtn px-3 py-1 rounded text-sm ${myLikes.has(b.benchID) ? 'bg-pink-500 text-white' : 'bg-pink-100 text-pink-700'}">❤ ${b.likes}</button>
+        <button class="favBtn px-3 py-1 rounded text-sm ${myFavorites.has(b.benchID) ? 'bg-amber-400 text-white' : 'bg-slate-100'}">${myFavorites.has(b.benchID) ? '⭐ Gardado' : '☆ Gardar'}</button>
+      </div>
+    </div>`;
+  // primeira foto do banco seguindo a ligazón HAL "photos"
+  api(b._links.photos.href + '?size=1').then(p => {
+    const photo = embedded(p, 'photos')[0];
+    if (photo) { const img = card.querySelector('img'); img.src = `/photos/${photo.photoID}/content?thumbnail=true`; img.classList.remove('hidden'); }
+  }).catch(() => {});
+  card.querySelector('.likeBtn').onclick = async e => { e.stopPropagation(); await toggle('likes', myLikes, b.benchID); };
+  card.querySelector('.favBtn').onclick = async e => { e.stopPropagation(); await toggle('favorites', myFavorites, b.benchID); };
+  card.onclick = () => openBench(b.benchID);
+  return card;
+}
+
+async function toggle(rel, set, benchID) {
+  try {
+    await api(`/users/${state.user}/${rel}/${benchID}`, { method: set.has(benchID) ? 'DELETE' : 'PUT' });
+    refreshVisible();
+  } catch (err) { toast(err.message); }
+}
+function refreshVisible() {
+  const visible = [...document.querySelectorAll('.tabContent')].find(c => !c.classList.contains('hidden')).id.replace('Tab', '');
+  if (visible === 'explore') loadBenches(state.page); else if (visible === 'favorites') loadUserBenches('favorites', 'favoriteGrid'); else if (visible === 'likes') loadUserBenches('likes', 'likeGrid');
+}
+
+let position = null;
+async function searchQuery(page) {
+  const p = new URLSearchParams({ page, size: 9, sort: $('sSort').value });
+  if ($('sQ').value.trim()) p.set('q', $('sQ').value.trim());
+  if ($('sType').value) p.set('type', $('sType').value);
+  if ($('sMin').value) p.set('minMark', $('sMin').value);
+  if ($('sCovered').value) p.set('covered', $('sCovered').value);
+  if ($('sNear').checked) {
+    if (!position) position = await new Promise((ok, ko) => navigator.geolocation.getCurrentPosition(ok, () => ko(new Error('Non se puido obter a localización'))));
+    p.set('lat', position.coords.latitude); p.set('lon', position.coords.longitude); p.set('radius', $('sRadius').value);
   }
-  if(r.status===204) return null;
-  const ct=r.headers.get('content-type')||'';
-  return ct.includes('json')? r.json(): r.text();
+  return '/benches?' + p;
 }
 
-// Login
-document.getElementById('loginForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const u=document.getElementById('username').value.trim();
-  const p=document.getElementById('password').value;
-  try{
-    const r = await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userID:u,password:p})});
-    if(!r.ok) throw new Error('Credenciais incorrectas');
-    const t = r.headers.get('authorization')||r.headers.get('Authorization');
-    if(!t) throw new Error('Non se recibiu token');
-    setToken(t.replace(/^Bearer /i,''));
-    showApp(u);
-  }catch(err){ document.getElementById('loginMsg').textContent=err.message; }
-});
-
-// Tabs login/register
-function showLoginForm(){
-  document.getElementById('loginForm').classList.remove('hidden');
-  document.getElementById('registerForm').classList.add('hidden');
-  document.getElementById('tabLogin').className='flex-1 py-2 rounded-lg text-sm font-medium bg-white shadow text-slate-900';
-  document.getElementById('tabRegister').className='flex-1 py-2 rounded-lg text-sm font-medium text-slate-500';
+async function loadBenches(page = 0) {
+  state.page = page;
+  const [data] = await Promise.all([api(await searchQuery(page)), loadMySets()]);
+  const grid = $('benchGrid'); grid.innerHTML = '';
+  const items = embedded(data, 'benches');
+  if (!items.length) grid.innerHTML = '<p class="text-slate-500 col-span-full">Non hai bancos que cumpran os filtros.</p>';
+  items.forEach(b => grid.appendChild(benchCard(b)));
+  // paxinación guiada polas ligazóns HAL
+  const pager = $('pager'); pager.innerHTML = '';
+  const info = data.page;
+  if (data._links.prev) pager.append(pagerBtn('← Anterior', () => loadBenches(page - 1)));
+  if (info.totalPages > 1) pager.append(Object.assign(document.createElement('span'), { className: 'px-3 py-2 text-sm text-slate-500', textContent: `${info.number + 1} / ${info.totalPages}` }));
+  if (data._links.next) pager.append(pagerBtn('Seguinte →', () => loadBenches(page + 1)));
 }
-function showRegisterForm(){
-  document.getElementById('loginForm').classList.add('hidden');
-  document.getElementById('registerForm').classList.remove('hidden');
-  document.getElementById('tabRegister').className='flex-1 py-2 rounded-lg text-sm font-medium bg-white shadow text-slate-900';
-  document.getElementById('tabLogin').className='flex-1 py-2 rounded-lg text-sm font-medium text-slate-500';
-}
-document.getElementById('tabLogin').addEventListener('click', showLoginForm);
-document.getElementById('tabRegister').addEventListener('click', showRegisterForm);
+const pagerBtn = (text, fn) => Object.assign(document.createElement('button'), { className: 'px-3 py-2 bg-white shadow rounded text-sm', textContent: text, onclick: fn });
+$('searchForm').onsubmit = e => { e.preventDefault(); loadBenches(0).catch(err => toast(err.message)); };
 
-document.getElementById('registerForm').addEventListener('submit', async (e)=>{
-  e.preventDefault();
-  const u=document.getElementById('rUsername').value.trim();
-  const n=document.getElementById('rName').value.trim();
-  const p=document.getElementById('rPassword').value;
-  try{
-    const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userID:u,name:n,password:p})});
-    if(!r.ok){ let txt=''; try{txt=await r.text();}catch(e){} throw new Error(txt||'Non se puido crear a conta'); }
-    // auto login
-    const lr=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userID:u,password:p})});
-    if(!lr.ok) throw new Error('Conta creada. Inicia sesión.');
-    const t=lr.headers.get('authorization')||lr.headers.get('Authorization');
-    setToken(t.replace(/^Bearer /i,''));
-    showApp(u);
-  }catch(err){ document.getElementById('loginMsg').textContent=err.message; }
-});
-
-
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  try{ await api('/auth/logout',{method:'POST'}); }catch(e){}
-  clearToken(); showLogin();
-});
-
-function showLogin(){
-  document.getElementById('loginView').classList.remove('hidden');
-  document.getElementById('appView').classList.add('hidden');
-}
-function showApp(user){
-  document.getElementById('loginView').classList.add('hidden');
-  document.getElementById('appView').classList.remove('hidden');
-  document.getElementById('whoami').textContent='Usuario: '+user;
-  loadAll();
+async function loadUserBenches(rel, gridId) {
+  const [data] = await Promise.all([api(`/users/${state.user}/${rel}?size=100`), loadMySets()]);
+  const grid = $(gridId); grid.innerHTML = '';
+  const items = embedded(data, 'benches');
+  if (!items.length) grid.innerHTML = '<p class="text-slate-500 col-span-full">Aínda non hai ningún banco aquí.</p>';
+  items.forEach(b => grid.appendChild(benchCard(b)));
 }
 
-// Tabs
-document.querySelectorAll('.tabBtn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const tab=btn.dataset.tab;
-    document.querySelectorAll('.tabBtn').forEach(b=>{ b.className='tabBtn bg-slate-200 px-4 py-2 rounded'; });
-    btn.className='tabBtn bg-blue-600 text-white px-4 py-2 rounded';
-    document.querySelectorAll('.tabContent').forEach(c=>c.classList.add('hidden'));
-    document.getElementById(tab+'Tab').classList.remove('hidden');
-    if(tab==='favorites') loadFavorites();
-  });
-});
+// ---------- Ficha do banco ----------
+const canModify = owner => state.admin || owner === state.user;
 
-function msg(t,cls='text-red-600'){ const m=document.getElementById('msg'); m.textContent=t; m.className='mt-4 text-sm '+cls; }
-
-let userFavoriteIds = new Set();
-async function fetchFavoriteIds(){
-  try{
-    const favs = await api('/benches/favorites');
-    const list = favs.content || favs || [];
-    userFavoriteIds = new Set(list.map(b => b.benchID));
-  }catch(e){ userFavoriteIds = new Set(); }
+async function openBench(id) {
+  try {
+    const b = await api('/benches/' + id);
+    state.current = b;
+    $('dName').textContent = b.name;
+    $('dMeta').innerHTML = `${esc(b.type)}${b.covered ? ' · cuberto' : ''} · ${b.latitude.toFixed(4)}, ${b.longitude.toFixed(4)} · ${stars(b.averageMark)} (${b.reviewCount}) · ❤ ${b.likes}` +
+      (b.owner ? ` · engadido por @${esc(b.owner)}` : '') +
+      ` · <a class="text-indigo-600 hover:underline" target="_blank" href="https://www.openstreetmap.org/?mlat=${b.latitude}&mlon=${b.longitude}#map=18/${b.latitude}/${b.longitude}">ver no mapa</a>`;
+    $('dDesc').textContent = b.description || '';
+    $('dOwnerActions').classList.toggle('hidden', !canModify(b.owner));
+    $('shDate').value = new Date().toISOString().slice(0, 10);
+    $('shadeResult').innerHTML = '';
+    if (!$('benchDialog').open) $('benchDialog').showModal();
+    await Promise.all([loadPhotos(b), loadReviews(b), loadComments(b)]);
+  } catch (err) { toast(err.message); }
 }
+$('dClose').onclick = () => { $('benchDialog').close(); refreshVisible(); };
 
-async function loadBenches(){
-  await fetchFavoriteIds();
-  const data=await api('/benches?size=200&sort=-likes');
-  const items=data.content||data;
-  const grid=document.getElementById('benchGrid');
-  grid.innerHTML='';
-  const sel=document.getElementById('reviewBench');
-  sel.innerHTML='';
-  (items||[]).forEach(b=>{
-    const card=document.createElement('div');
-    card.className='bg-slate-50 rounded-xl overflow-hidden shadow';
-    const imgIdx = ((b.benchID-1) % 30) + 1;
-    const isFav = userFavoriteIds.has(b.benchID);
-    card.innerHTML=`
-      <img src="/img/img${imgIdx}.jpg" class="w-full h-48 object-cover" alt="Banco ${b.benchID}">
-      <div class="p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold">${b.type} #${b.benchID}</h3>
-          <span class="text-sm text-slate-500">${b.cords}</span>
-        </div>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <button class="likeBtn bg-pink-100 text-pink-700 px-3 py-1 rounded hover:bg-pink-200 text-sm">❤ ${b.likes??0}</button>
-            <button class="favBtn ${isFav ? 'bg-amber-400 text-white' : 'bg-slate-200 text-slate-700'} px-3 py-1 rounded text-sm hover:opacity-80">
-              ${isFav ? '⭐ Gardado' : '☆ Gardar'}
-            </button>
-          </div>
-          <button class="delBtn text-red-600 text-sm">Borrar</button>
-        </div>
-      </div>`;
-    card.querySelector('.likeBtn').addEventListener('click', async ()=>{
-      try{ await api('/benches/'+b.benchID+'/like',{method:'POST'}); loadBenches(); }catch(e){ msg(e.message); }
-    });
-    card.querySelector('.favBtn').addEventListener('click', async ()=>{
-      try{
-        if(userFavoriteIds.has(b.benchID)){
-          await api('/benches/'+b.benchID+'/favorite',{method:'DELETE'});
-        } else {
-          await api('/benches/'+b.benchID+'/favorite',{method:'POST'});
-        }
-        await loadBenches();
-      }catch(e){ msg(e.message); }
-    });
-    card.querySelector('.delBtn').addEventListener('click', async ()=>{
-      if(!confirm('Borrar banco '+b.benchID+'?')) return;
-      await api('/benches/'+b.benchID,{method:'DELETE'}); loadBenches(); loadReviews();
-    });
-    grid.appendChild(card);
-    const opt=document.createElement('option'); opt.value=b.benchID; opt.textContent='#'+b.benchID+' '+b.type; sel.appendChild(opt);
-  });
-}
-
-async function loadFavorites(){
-  try{
-    const favs = await api('/benches/favorites');
-    const items = favs.content || favs || [];
-    const grid = document.getElementById('favoriteGrid');
-    grid.innerHTML = '';
-    if(items.length === 0){
-      grid.innerHTML = '<p class="text-slate-500 col-span-2">Aínda non tes bancos favoritos gardados.</p>';
-      return;
+async function loadPhotos(b) {
+  const data = await api(b._links.photos.href);
+  const box = $('dPhotos'); box.innerHTML = '';
+  const photos = embedded(data, 'photos');
+  if (!photos.length) box.innerHTML = '<p class="text-sm text-slate-500">Sen fotos. Sé o primeiro en subir unha!</p>';
+  photos.forEach(p => {
+    const fig = document.createElement('figure');
+    fig.className = 'relative shrink-0';
+    fig.innerHTML = `<a href="/photos/${p.photoID}/content" target="_blank"><img src="/photos/${p.photoID}/content?thumbnail=true" alt="Foto de @${esc(p.uploader)}" class="h-32 rounded-lg object-cover"></a>
+      <figcaption class="text-xs text-slate-500">@${esc(p.uploader)} · ${p.width}×${p.height}</figcaption>`;
+    if (canModify(p.uploader)) {
+      const del = Object.assign(document.createElement('button'), { className: 'absolute top-1 right-1 bg-white/90 rounded px-1 text-xs text-red-600', textContent: '✕', title: 'Borrar foto' });
+      del.onclick = async () => { try { await api(`/photos/${p.photoID}`, { method: 'DELETE' }); loadPhotos(b); } catch (err) { toast(err.message); } };
+      fig.append(del);
     }
-    items.forEach(b=>{
-      const card = document.createElement('div');
-      card.className = 'bg-slate-50 rounded-xl overflow-hidden shadow';
-      const imgIdx = ((b.benchID-1) % 30) + 1;
-      card.innerHTML = `
-        <img src="/img/img${imgIdx}.jpg" class="w-full h-48 object-cover" alt="Banco ${b.benchID}">
-        <div class="p-3 space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="font-semibold">${b.type} #${b.benchID}</h3>
-            <span class="text-sm text-slate-500">${b.cords}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-pink-600 text-sm font-medium">❤ ${b.likes??0} likes</span>
-            <button class="removeFavBtn bg-red-100 text-red-700 px-3 py-1 rounded text-sm hover:bg-red-200">Quitar</button>
-          </div>
-        </div>`;
-      card.querySelector('.removeFavBtn').addEventListener('click', async ()=>{
-        await api('/benches/'+b.benchID+'/favorite',{method:'DELETE'});
-        loadFavorites();
-      });
-      grid.appendChild(card);
-    });
-  }catch(e){ msg(e.message); }
-}
-
-async function loadPhotos(){
-  const data=await api('/photos');
-  const items=data.content||data;
-  const tbody=document.getElementById('photoTable');
-  tbody.innerHTML='';
-  (items||[]).forEach(p=>{
-    const tr=document.createElement('tr');
-    const imgIdx = ((p.photoID-1) % 30) + 1;
-    tr.innerHTML=`<td class="p-2"><img src="/img/img${imgIdx}.jpg" class="w-16 h-12 object-cover rounded"></td><td class="p-2">${p.photoID}</td><td class="p-2">${p.resolution}</td><td class="p-2">${p.size}</td>
-      <td class="p-2 text-right"><button class="text-red-600" data-id="${p.photoID}">Borrar</button></td>`;
-    tr.querySelector('button').addEventListener('click', async ()=>{ await api('/photos/'+p.photoID,{method:'DELETE'}); loadPhotos(); });
-    tbody.appendChild(tr);
+    box.append(fig);
   });
 }
-document.getElementById('photoForm').addEventListener('submit', async(e)=>{
-  e.preventDefault();
-  try{
-    await api('/photos',{method:'POST',body:JSON.stringify({resolution:document.getElementById('photoRes').value,size:Number(document.getElementById('photoSize').value)})});
-    document.getElementById('photoRes').value=''; document.getElementById('photoSize').value='';
-    msg('Foto engadida','text-green-600'); loadPhotos();
-  }catch(err){ msg(err.message); }
-});
+$('dPhotoInput').onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const form = new FormData(); form.append('file', file);
+  try {
+    await api(`/benches/${state.current.benchID}/photos`, { method: 'POST', form });
+    toast('Foto subida', true);
+    setTimeout(() => loadPhotos(state.current), 800); // a miniatura xérase en segundo plano
+  } catch (err) { toast(err.message); }
+  e.target.value = '';
+};
 
-async function loadReviews(){
-  const data=await api('/valoraciones');
-  const items=data.content||data;
-  const tbody=document.getElementById('reviewTable');
-  tbody.innerHTML='';
-  (items||[]).forEach(r=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`<td class="p-2">${r.reviewId}</td><td class="p-2">#${r.benchOfReview.benchID}</td><td class="p-2">${r.mark}</td><td class="p-2">${r.note||''}</td>
-      <td class="p-2 text-right"><button class="text-red-600">Borrar</button></td>`;
-    tr.querySelector('button').addEventListener('click', async ()=>{ await api('/valoraciones/'+r.reviewId,{method:'DELETE'}); loadReviews(); });
-    tbody.appendChild(tr);
+const reasonLabel = { COVERED: 'cuberto', NIGHT: 'noite', LOW_SUN: 'sol baixo', OVERCAST: 'nubrado', DIRECT_SUN: 'sol' };
+const reasonColor = { COVERED: 'bg-teal-600', NIGHT: 'bg-slate-700', LOW_SUN: 'bg-orange-300', OVERCAST: 'bg-slate-400', DIRECT_SUN: 'bg-amber-400' };
+$('shadeForm').onsubmit = async e => {
+  e.preventDefault();
+  try {
+    const q = new URLSearchParams({ date: $('shDate').value, from: $('shFrom').value, to: $('shTo').value });
+    const r = await api(`/benches/${state.current.benchID}/shade?` + q);
+    $('shadeResult').innerHTML = `
+      <p class="text-sm mb-2"><b>${r.shadedHours}</b> h á sombra · <b>${r.sunnyHours}</b> h ao sol
+        <span class="text-xs text-slate-500">(${r.source === 'OPEN_METEO' ? 'con predición meteorolóxica de Open-Meteo' : 'só posición solar, ceo despexado'})</span></p>
+      <div class="flex gap-1">${r.hours.map(h => `
+        <div class="flex-1 text-center" title="${h.hour}:00 · ${reasonLabel[h.reason]} · elevación ${h.sunElevation}°${h.cloudCover != null ? ' · nubes ' + h.cloudCover + '%' : ''}">
+          <div class="hour-bar rounded ${reasonColor[h.reason]}"></div><div class="text-[10px] text-slate-600">${h.hour}</div>
+        </div>`).join('')}</div>
+      <div class="flex flex-wrap gap-3 mt-2 text-xs">${Object.keys(reasonLabel).map(k => `<span class="flex items-center gap-1"><span class="w-3 h-3 rounded ${reasonColor[k]}"></span>${reasonLabel[k]}</span>`).join('')}</div>`;
+  } catch (err) { toast(err.message); }
+};
+
+async function loadReviews(b) {
+  const data = await api(b._links.reviews.href + '?size=50');
+  const list = $('dReviews'); list.innerHTML = '';
+  const reviews = embedded(data, 'reviews');
+  const mine = reviews.find(r => r.author === state.user);
+  $('reviewForm').classList.toggle('hidden', !!mine);
+  if (!reviews.length) list.innerHTML = '<li class="py-2 text-slate-500">Aínda sen valoracións.</li>';
+  reviews.forEach(r => {
+    const li = document.createElement('li'); li.className = 'py-2';
+    li.innerHTML = `<div class="flex justify-between"><span><b>@${esc(r.author)}</b> · <span class="text-amber-600">★ ${r.mark}</span></span><span class="text-xs text-slate-400">${r.date}</span></div>
+      <p class="note">${esc(r.note)}</p>`;
+    if (canModify(r.author)) {
+      const actions = document.createElement('div'); actions.className = 'flex gap-3 text-xs mt-1';
+      const edit = Object.assign(document.createElement('button'), { className: 'text-indigo-600', textContent: 'Editar' });
+      edit.onclick = async () => {
+        const mark = prompt('Nova nota (0-10)', r.mark); if (mark === null) return;
+        const note = prompt('Reseña', r.note || ''); if (note === null) return;
+        try {
+          await api('/reviews/' + r.reviewID, { method: 'PATCH', patch: [{ op: 'replace', path: '/mark', value: Number(mark) }, { op: 'replace', path: '/note', value: note }] });
+          setTimeout(() => openBench(b.benchID), 500); // a media recalcúlase de forma asíncrona
+        } catch (err) { toast(err.message); }
+      };
+      const del = Object.assign(document.createElement('button'), { className: 'text-red-600', textContent: 'Borrar' });
+      del.onclick = async () => { try { await api('/reviews/' + r.reviewID, { method: 'DELETE' }); setTimeout(() => openBench(b.benchID), 500); } catch (err) { toast(err.message); } };
+      actions.append(edit, del); li.append(actions);
+    }
+    list.append(li);
   });
 }
-document.getElementById('reviewForm').addEventListener('submit', async(e)=>{
+$('reviewForm').onsubmit = async e => {
   e.preventDefault();
-  const benchId=Number(document.getElementById('reviewBench').value);
-  try{
-    await api('/valoraciones',{method:'POST',body:JSON.stringify({reviewer:{userID:localStorage.getItem('who')||JSON.parse(atob(token().split('.')[1])).sub},benchOfReview:{benchID:benchId},mark:Number(document.getElementById('reviewMark').value),note:document.getElementById('reviewNote').value})});
-    document.getElementById('reviewNote').value='';
-    msg('Valoración enviada','text-green-600'); loadReviews();
-  }catch(err){ msg(err.message); }
-});
+  try {
+    await api(`/benches/${state.current.benchID}/reviews`, { method: 'POST', body: { mark: Number($('rvMark').value), note: $('rvNote').value } });
+    $('rvMark').value = ''; $('rvNote').value = '';
+    toast('Grazas pola túa valoración', true);
+    setTimeout(() => openBench(state.current.benchID), 500);
+  } catch (err) { toast(err.message); }
+};
 
-async function loadProfile(){
-  // decode subject
-  const sub=JSON.parse(atob(token().split('.')[1])).sub;
-  const u=await api('/users/'+sub);
-  document.getElementById('pName').value=u.name||'';
-  document.getElementById('pLast').value=u.lastName||'';
-  document.getElementById('pNick').value=u.nickname||'';
-  document.getElementById('pLocation').value=u.location||'';
-  document.getElementById('profileForm').onsubmit=async(ev)=>{
-    ev.preventDefault();
-    const body={userID:sub,name:document.getElementById('pName').value,lastName:document.getElementById('pLast').value,nickname:document.getElementById('pNick').value,location:document.getElementById('pLocation').value};
-    const pw=document.getElementById('pPassword').value;
-    if(pw) body.password=pw;
-    await api('/users/'+sub,{method:'PUT',body:JSON.stringify(body)});
-    document.getElementById('profileMsg').textContent='Perfil actualizado'; document.getElementById('profileMsg').className='mt-2 text-sm text-green-600';
-  };
+async function loadComments(b) {
+  const data = await api(b._links.comments.href + '?size=100');
+  const list = $('dComments'); list.innerHTML = '';
+  const comments = embedded(data, 'comments');
+  if (!comments.length) list.innerHTML = '<li class="py-2 text-slate-500">Sen comentarios.</li>';
+  comments.forEach(c => {
+    const li = document.createElement('li'); li.className = 'py-2';
+    li.innerHTML = `<div class="flex justify-between"><b>@${esc(c.author)}</b><span class="text-xs text-slate-400">${new Date(c.createdAt).toLocaleString('gl')}${c.editedAt ? ' (editado)' : ''}</span></div><p>${esc(c.text)}</p>`;
+    if (canModify(c.author)) {
+      const actions = document.createElement('div'); actions.className = 'flex gap-3 text-xs mt-1';
+      const edit = Object.assign(document.createElement('button'), { className: 'text-indigo-600', textContent: 'Editar' });
+      edit.onclick = async () => {
+        const text = prompt('Editar comentario', c.text); if (!text) return;
+        try { await api('/comments/' + c.commentID, { method: 'PATCH', patch: [{ op: 'replace', path: '/text', value: text }] }); loadComments(b); } catch (err) { toast(err.message); }
+      };
+      const del = Object.assign(document.createElement('button'), { className: 'text-red-600', textContent: 'Borrar' });
+      del.onclick = async () => { try { await api('/comments/' + c.commentID, { method: 'DELETE' }); loadComments(b); } catch (err) { toast(err.message); } };
+      actions.append(edit, del); li.append(actions);
+    }
+    list.append(li);
+  });
 }
+$('commentForm').onsubmit = async e => {
+  e.preventDefault();
+  try { await api(`/benches/${state.current.benchID}/comments`, { method: 'POST', body: { text: $('cmText').value } }); $('cmText').value = ''; loadComments(state.current); }
+  catch (err) { toast(err.message); }
+};
 
-async function loadAll(){
-  try{ await loadBenches(); await loadPhotos(); await loadReviews(); await loadProfile(); }
-  catch(e){ msg(e.message); if(e.message.includes('401')){ clearToken(); showLogin(); } }
+$('dDelete').onclick = async () => {
+  if (!confirm(`Borrar "${state.current.name}" coas súas valoracións, comentarios e fotos?`)) return;
+  try { await api('/benches/' + state.current.benchID, { method: 'DELETE' }); $('benchDialog').close(); toast('Banco borrado', true); refreshVisible(); }
+  catch (err) { toast(err.message); }
+};
+
+// ---------- Alta e edición de bancos ----------
+function openBenchForm(bench) {
+  state.editing = bench;
+  $('bfTitle').textContent = bench ? 'Editar banco' : 'Novo banco';
+  $('bfName').value = bench?.name || ''; $('bfDesc').value = bench?.description || '';
+  $('bfLat').value = bench?.latitude ?? ''; $('bfLon').value = bench?.longitude ?? '';
+  $('bfType').value = bench?.type || 'Wooden'; $('bfCovered').checked = !!bench?.covered;
+  $('bfMsg').textContent = '';
+  $('benchFormDialog').showModal();
 }
+$('newBenchBtn').onclick = () => openBenchForm(null);
+$('dEdit').onclick = () => openBenchForm(state.current);
+$('bfCancel').onclick = () => $('benchFormDialog').close();
+$('bfLocate').onclick = () => navigator.geolocation.getCurrentPosition(
+  p => { $('bfLat').value = p.coords.latitude.toFixed(6); $('bfLon').value = p.coords.longitude.toFixed(6); },
+  () => $('bfMsg').textContent = 'Non se puido obter a localización');
+$('benchForm').onsubmit = async e => {
+  e.preventDefault();
+  const data = { name: $('bfName').value.trim(), description: $('bfDesc').value.trim(), latitude: Number($('bfLat').value),
+                 longitude: Number($('bfLon').value), type: $('bfType').value, covered: $('bfCovered').checked };
+  try {
+    if (state.editing) {
+      // JSON-Patch só cos campos modificados
+      const patch = Object.entries(data).filter(([k, v]) => state.editing[k] !== v).map(([k, v]) => ({ op: 'replace', path: '/' + k, value: v }));
+      if (patch.length) await api('/benches/' + state.editing.benchID, { method: 'PATCH', patch });
+      $('benchFormDialog').close(); openBench(state.editing.benchID);
+    } else {
+      const created = await api('/benches', { method: 'POST', body: data });
+      $('benchFormDialog').close(); toast('Banco engadido', true); loadBenches(0); openBench(created.benchID);
+    }
+  } catch (err) { $('bfMsg').textContent = err.message; }
+};
 
-if(token()){ showApp(JSON.parse(atob(token().split('.')[1])).sub); } else { showLogin(); }
+// ---------- Actividade e perfil ----------
+function reviewItem(r) {
+  const li = document.createElement('li'); li.className = 'py-2 flex justify-between gap-2 cursor-pointer hover:bg-slate-50';
+  li.innerHTML = `<span><b>@${esc(r.author)}</b> deulle <span class="text-amber-600">★ ${r.mark}</span> ao banco #${r.benchID}${r.note ? ': “' + esc(r.note) + '”' : ''}</span><span class="text-xs text-slate-400 shrink-0">${r.date}</span>`;
+  li.onclick = () => openBench(r.benchID);
+  return li;
+}
+async function loadActivity() {
+  const data = await api('/reviews?size=20');
+  $('activityList').replaceChildren(...embedded(data, 'reviews').map(reviewItem));
+}
+async function loadProfile() {
+  const [u, reviews] = await Promise.all([api('/users/' + state.user), api(`/users/${state.user}/reviews?size=50`)]);
+  $('pName').value = u.name || ''; $('pLast').value = u.lastName || ''; $('pNick').value = u.nickname || '';
+  $('pLocation').value = u.location || ''; $('pBirthday').value = u.birthday || ''; $('pPassword').value = '';
+  const items = embedded(reviews, 'reviews');
+  $('myReviews').replaceChildren(...(items.length ? items.map(reviewItem) : [Object.assign(document.createElement('li'), { className: 'py-2 text-slate-500', textContent: 'Aínda non valoraches ningún banco.' })]));
+}
+$('profileForm').onsubmit = async e => {
+  e.preventDefault();
+  const body = { name: $('pName').value, lastName: $('pLast').value, nickname: $('pNick').value, location: $('pLocation').value, birthday: $('pBirthday').value || null };
+  if ($('pPassword').value) body.password = $('pPassword').value;
+  try { await api('/users/' + state.user, { method: 'PUT', body }); toast('Perfil actualizado', true); $('pPassword').value = ''; }
+  catch (err) { toast(err.message); }
+};
+$('deleteAccountBtn').onclick = async () => {
+  if (!confirm('Seguro? Borraranse tamén as túas valoracións, comentarios e fotos.')) return;
+  try { await api('/users/' + state.user, { method: 'DELETE' }); clearToken(); showLogin(); } catch (err) { toast(err.message); }
+};
+
+// ---------- Inicio ----------
+if (token() && claims()) showApp(); else showLogin();
 </script>
 </body>
 </html>
