@@ -5,13 +5,18 @@ import org.jspecify.annotations.NullMarked;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @SuppressWarnings("UnusedReturnValue")
 @NullMarked
 @Repository
 public interface RefreshTokenRepository extends CrudRepository<RefreshToken, String> {
-    Collection<RefreshToken> deleteAllByUser(String user);
+    // Os repositorios de Redis non executan consultas derivadas de borrado: búscase e bórrase en dous pasos
+    List<RefreshToken> findAllByUser(String user);
+
+    default void deleteAllByUser(String user) {
+        deleteAll(findAllByUser(user));
+    }
     Optional<RefreshToken> findByToken(String token);
 }

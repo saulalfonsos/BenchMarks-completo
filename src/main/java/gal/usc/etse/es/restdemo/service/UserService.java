@@ -1,30 +1,25 @@
 package gal.usc.etse.es.restdemo.service;
 
-import gal.usc.etse.es.restdemo.exception.BenchNotFoundException;
 import gal.usc.etse.es.restdemo.exception.DuplicateUserException;
+import gal.usc.etse.es.restdemo.exception.ResourceNotFoundException;
 import gal.usc.etse.es.restdemo.model.dto.Bench;
 import gal.usc.etse.es.restdemo.model.dto.User;
-import gal.usc.etse.es.restdemo.model.entity.Role;
 import gal.usc.etse.es.restdemo.repository.BenchRepository;
+import gal.usc.etse.es.restdemo.repository.RefreshTokenRepository;
 import gal.usc.etse.es.restdemo.repository.RoleRepository;
 import gal.usc.etse.es.restdemo.repository.UserRepository;
-import gal.usc.etse.es.utils.patch.JsonPatch;
 import gal.usc.etse.es.utils.patch.JsonPatchOperation;
 import org.jspecify.annotations.NullMarked;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @NullMarked
@@ -32,113 +27,141 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BenchRepository benchRepository;
+    private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwordEncoder;
-    private final JsonMapper mapper;
+    private final Patcher patcher;
 
-    @Autowired
-    public UserService(UserRepository userRepository, RoleRepository roleRepository, BenchRepository benchRepository, PasswordEncoder passwordEncoder, JsonMapper mapper) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, BenchRepository benchRepository,
+                       RefreshTokenRepository refreshTokens, PasswordEncoder passwordEncoder, Patcher patcher) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.benchRepository = benchRepository;
+        this.refreshTokens = refreshTokens;
         this.passwordEncoder = passwordEncoder;
-        this.mapper = mapper;
+        this.patcher = patcher;
     }
 
     @Override
+    @Transactional(readOnly = true)
     public gal.usc.etse.es.restdemo.model.entity.User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUserID(username).orElseThrow(() -> new UsernameNotFoundException(username));
     }
 
+    private gal.usc.etse.es.restdemo.model.entity.User find(String userID) {
+        return userRepository.findByUserID(userID).orElseThrow(() -> new ResourceNotFoundException("User", userID));
+    }
+
+    @Transactional(readOnly = true)
     public List<User> get() {
         return userRepository.findAll().stream().map(User::from).toList();
     }
 
-    public Page<User> get(PageRequest page) {
+    @Transactional(readOnly = true)
+    public Page<User> get(Pageable page) {
         return userRepository.findAll(page).map(User::from);
     }
 
-    public User get(String userID){
-        return User.from(loadUserByUsername(userID));
+    @Transactional(readOnly = true)
+    public User get(String userID) {
+        return User.from(find(userID));
     }
 
+    /** Rexistro: todo usuario novo recibe só o rol USER, envíe o que envíe o cliente. */
+    @Transactional
     public User create(User user) throws DuplicateUserException {
-        var dbUser = userRepository.findByUserID(user.userID());
-        if (dbUser.isPresent()) {
-            throw new DuplicateUserException(dbUser.get());
+        var existing = userRepository.findByUserID(user.userID());
+        if (existing.isPresent()) {
+            throw new DuplicateUserException(existing.get());
         }
 
-        Role userRole = roleRepository.findByRolename("USER");
-
-        gal.usc.etse.es.restdemo.model.entity.User entity = gal.usc.etse.es.restdemo.model.entity.User.from(user, passwordEncoder);
-        if (entity.getRoles() == null) entity.setRoles(new java.util.HashSet<>());
-        if (userRole != null) entity.addRole(userRole);
+        var entity = new gal.usc.etse.es.restdemo.model.entity.User(
+                user.userID(), user.name(), user.lastName(), user.nickname(), user.birthday(), user.location(),
+                passwordEncoder.encode(user.password())
+        ).addRole(roleRepository.findByRolename("USER"));
 
         return User.from(userRepository.save(entity));
     }
 
-    public User update(String userID, User changes) {
-        gal.usc.etse.es.restdemo.model.entity.User db = loadUserByUsername(userID);
-        if (changes.name() != null) db.setName(changes.name());
-        if (changes.lastName() != null) db.setLastName(changes.lastName());
-        if (changes.nickname() != null) db.setNickname(changes.nickname());
-        if (changes.birthday() != null) db.setBirthday(changes.birthday());
-        if (changes.location() != null) db.setLocation(changes.location());
+    /** PUT: substitúe os datos de perfil. O identificador e os roles non se poden cambiar por esta vía. */
+    @Transactional
+    public User replace(String userID, User changes) {
+        var db = find(userID);
+        applyProfile(db, changes);
         if (changes.password() != null && !changes.password().isBlank()) {
             db.setPassword(passwordEncoder.encode(changes.password()));
         }
-        return User.from(userRepository.save(db));
+        return User.from(db);
     }
 
-    public User update(String userID, List<JsonPatchOperation> changes) throws UsernameNotFoundException {
-        User user = get(userID);
-        JsonNode patched = JsonPatch.apply(changes, mapper.convertValue(user, JsonNode.class));
-        User updated = mapper.convertValue(patched, User.class);
-        gal.usc.etse.es.restdemo.model.entity.User db = loadUserByUsername(userID);
-        // preserve userID
-        updated = new User(userID, updated.name(), updated.lastName(), updated.nickname(), updated.birthday(), updated.location(),
-                updated.password(), updated.roles());
-        if (updated.password() != null && !updated.password().isBlank() && !updated.password().equals(user.password())) {
-            db.setPassword(passwordEncoder.encode(updated.password()));
+    @Transactional
+    public User update(String userID, List<JsonPatchOperation> changes) {
+        var db = find(userID);
+        User current = User.from(db);
+        User patched = patcher.apply(new User(current.userID(), current.name(), current.lastName(), current.nickname(),
+                current.birthday(), current.location(), null, current.roles()), changes, User.class);
+
+        applyProfile(db, patched);
+        if (patched.password() != null && !patched.password().isBlank()) {
+            db.setPassword(passwordEncoder.encode(patched.password()));
         }
-        if (updated.name() != null) db.setName(updated.name());
-        if (updated.lastName() != null) db.setLastName(updated.lastName());
-        if (updated.nickname() != null) db.setNickname(updated.nickname());
-        if (updated.birthday() != null) db.setBirthday(updated.birthday());
-        if (updated.location() != null) db.setLocation(updated.location());
-        return User.from(userRepository.save(db));
+        return User.from(db);
     }
 
+    private static void applyProfile(gal.usc.etse.es.restdemo.model.entity.User db, User changes) {
+        db.setName(changes.name())
+                .setLastName(changes.lastName())
+                .setNickname(changes.nickname())
+                .setBirthday(changes.birthday())
+                .setLocation(changes.location());
+    }
+
+    /** Borra o usuario (as súas valoracións, comentarios e fotos bórranse en cascada) e invalida as súas sesións. */
+    @Transactional
+    @CacheEvict(cacheNames = BenchService.CACHE, allEntries = true)
     public void delete(String userID) {
-        userRepository.findByUserID(userID).ifPresent(userRepository::delete);
+        userRepository.delete(find(userID));
+        refreshTokens.deleteAllByUser(userID);
     }
 
-    // --- METODY DO OBSŁUGI ULUBIONYCH ŁAWEK ---
-
-    @Transactional
-    public void addFavoriteBench(String userID, Long benchID) throws UsernameNotFoundException, BenchNotFoundException {
-        gal.usc.etse.es.restdemo.model.entity.User user = loadUserByUsername(userID);
-        gal.usc.etse.es.restdemo.model.entity.Bench bench = benchRepository.findById(benchID)
-                .orElseThrow(() -> new BenchNotFoundException(benchID));
-
-        user.getFavoriteBenches().add(bench);
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void removeFavoriteBench(String userID, Long benchID) throws UsernameNotFoundException, BenchNotFoundException {
-        gal.usc.etse.es.restdemo.model.entity.User user = loadUserByUsername(userID);
-        gal.usc.etse.es.restdemo.model.entity.Bench bench = benchRepository.findById(benchID)
-                .orElseThrow(() -> new BenchNotFoundException(benchID));
-
-        user.getFavoriteBenches().remove(bench);
-        userRepository.save(user);
-    }
+    // --- Lista de bancos gardados (favoritos) ---
 
     @Transactional(readOnly = true)
-    public Set<Bench> getFavoriteBenches(String userID) throws UsernameNotFoundException {
-        gal.usc.etse.es.restdemo.model.entity.User user = loadUserByUsername(userID);
-        return user.getFavoriteBenches().stream()
-                .map(Bench::from)
-                .collect(Collectors.toSet());
+    public Page<Bench> getFavorites(String userID, Pageable pageable) {
+        find(userID);
+        return benchRepository.findFavoritesOf(userID, pageable).map(Bench::from);
+    }
+
+    @Transactional
+    public void addFavorite(String userID, Long benchID) {
+        find(userID).getFavoriteBenches().add(bench(benchID));
+    }
+
+    @Transactional
+    public void removeFavorite(String userID, Long benchID) {
+        find(userID).getFavoriteBenches().remove(bench(benchID));
+    }
+
+    // --- Likes (un por usuario e banco, polo que PUT e DELETE son idempotentes) ---
+
+    @Transactional(readOnly = true)
+    public Page<Bench> getLikes(String userID, Pageable pageable) {
+        find(userID);
+        return benchRepository.findLikedBy(userID, pageable).map(Bench::from);
+    }
+
+    @Transactional
+    @CacheEvict(cacheNames = BenchService.CACHE, key = "#benchID")
+    public void like(String userID, Long benchID) {
+        find(userID).getLikedBenches().add(bench(benchID));
+    }
+
+    @Transactional
+    @CacheEvict(cacheNames = BenchService.CACHE, key = "#benchID")
+    public void unlike(String userID, Long benchID) {
+        find(userID).getLikedBenches().remove(bench(benchID));
+    }
+
+    private gal.usc.etse.es.restdemo.model.entity.Bench bench(Long benchID) {
+        return benchRepository.findById(benchID).orElseThrow(() -> new ResourceNotFoundException("Bench", benchID));
     }
 }

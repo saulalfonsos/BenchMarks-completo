@@ -5,18 +5,18 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 @Entity
-@Table(name="users")
+@Table(name = "users")
 public class User implements UserDetails {
+    // Ao borrar un banco, a base de datos elimina en cascada as filas das táboas de favoritos e likes
+    private static final String BENCH_FK_CASCADE = "FOREIGN KEY (bench_id) REFERENCES benches (bench_id) ON DELETE CASCADE";
 
     @Id
     @Column(name = "user_id")
@@ -28,38 +28,34 @@ public class User implements UserDetails {
     private LocalDate birthday;
     private String location;
 
+    @Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role"))
-    private Set<Role> roles;
+    private Set<Role> roles = new HashSet<>();
 
-    // --- RELACJA DO ULUBIONYCH ŁAWEK ---
+    /** Lista de bancos gardados ("quero ir"). */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_favorite_benches",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "bench_id"))
+            inverseJoinColumns = @JoinColumn(name = "bench_id"),
+            inverseForeignKey = @ForeignKey(name = "fk_favorite_bench", foreignKeyDefinition = BENCH_FK_CASCADE))
     private Set<Bench> favoriteBenches = new HashSet<>();
 
-    public static User from(gal.usc.etse.es.restdemo.model.dto.User user, org.springframework.security.crypto.password.PasswordEncoder passwordEncoder) {
-        if (user == null) return null;
-        return new User(
-                user.userID(),
-                user.name(),
-                user.lastName(),
-                user.nickname(),
-                user.birthday(),
-                user.location(),
-                user.password() == null || user.password().isBlank() ? null : passwordEncoder.encode(user.password()),
-                user.roles() == null ? new java.util.HashSet<>() : new java.util.HashSet<>()
-        );
-    }
+    /** Bancos que lle gustan ao usuario (un like por usuario e banco). */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_liked_benches",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "bench_id"),
+            inverseForeignKey = @ForeignKey(name = "fk_liked_bench", foreignKeyDefinition = BENCH_FK_CASCADE))
+    private Set<Bench> likedBenches = new HashSet<>();
 
     public User() {}
 
-    public User(String userID, String name, String lastName, String nickname, LocalDate birthday, String location, String password, Set<Role> roles) {
+    public User(String userID, String name, String lastName, String nickname, LocalDate birthday, String location, String password) {
         this.userID = userID;
         this.name = name;
         this.lastName = lastName;
@@ -67,14 +63,11 @@ public class User implements UserDetails {
         this.birthday = birthday;
         this.location = location;
         this.password = password;
-        this.roles = roles;
-        this.favoriteBenches = new HashSet<>();
     }
 
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (roles == null) return new HashSet<>();
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRolename()))
                 .toList();
@@ -82,49 +75,20 @@ public class User implements UserDetails {
 
     @Override
     @NonNull
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
+    public User setPassword(String password) { this.password = password; return this; }
 
     @Override
     @NonNull
-    public String getUsername() {
-        return userID;
-    }
+    public String getUsername() { return userID; }
 
-    @NonNull
-    public Set<Role> getRoles() {
-        return roles;
-    }
+    public Set<Role> getRoles() { return roles; }
+    public User addRole(Role role) { this.roles.add(role); return this; }
 
-    public User setRoles(Set<Role> roles) {
-        this.roles = roles;
-        return this;
-    }
-
-    public User addRole(Role role) {
-        if (this.roles == null) {
-            this.roles = new HashSet<>();
-        }
-        this.roles.add(role);
-        return this;
-    }
-
-    // Gettery i Settery dla ulubionych
-    public Set<Bench> getFavoriteBenches() {
-        if (favoriteBenches == null) {
-            favoriteBenches = new HashSet<>();
-        }
-        return favoriteBenches;
-    }
-
-    public User setFavoriteBenches(Set<Bench> favoriteBenches) {
-        this.favoriteBenches = favoriteBenches;
-        return this;
-    }
+    public Set<Bench> getFavoriteBenches() { return favoriteBenches; }
+    public Set<Bench> getLikedBenches() { return likedBenches; }
 
     public String getUserID() { return userID; }
-    public User setUserID(String userID) { this.userID = userID; return this; }
 
     public String getName() { return name; }
     public User setName(String name) { this.name = name; return this; }
@@ -140,6 +104,4 @@ public class User implements UserDetails {
 
     public String getLocation() { return location; }
     public User setLocation(String location) { this.location = location; return this; }
-
-    public User setPassword(String password) { this.password = password; return this; }
 }

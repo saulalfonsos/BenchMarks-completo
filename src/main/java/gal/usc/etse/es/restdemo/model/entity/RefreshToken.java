@@ -3,12 +3,14 @@ package gal.usc.etse.es.restdemo.model.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
 
 @SuppressWarnings("unused")
 @RedisHash()
 public class RefreshToken {
     @Id
     private String token;
+    @Indexed // necesario para poder buscar e borrar os tokens dun usuario (logout, rotación)
     private String user;
     @TimeToLive
     private long ttl;

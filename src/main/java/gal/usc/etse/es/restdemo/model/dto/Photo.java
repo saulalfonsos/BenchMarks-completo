@@ -1,16 +1,21 @@
 package gal.usc.etse.es.restdemo.model.dto;
 
-public record Photo (
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.hateoas.server.core.Relation;
+
+import java.time.Instant;
+
+/** Metadatos dunha foto. O binario descárgase en /photos/{id}/content. */
+@Relation(collectionRelation = "photos", itemRelation = "photo")
+@Schema(description = "Metadatos dunha foto dun banco")
+public record Photo(
         Long photoID,
-        String resolution,
-        Long size
-) {
-    public static Photo from(gal.usc.etse.es.restdemo.model.entity.Photo photo) {
-        if (photo == null) return null;
-        return new Photo(
-                photo.getPhotoID(),
-                photo.getResolution(),
-                photo.getSize()
-        );
-    }
-}
+        Long benchID,
+        String uploader,
+        @Schema(example = "image/jpeg") String contentType,
+        @Schema(description = "Tamaño en bytes") long size,
+        int width,
+        int height,
+        Instant uploadedAt,
+        @Schema(description = "A miniatura xérase de forma asíncrona tras a subida") boolean thumbnailAvailable
+) {}

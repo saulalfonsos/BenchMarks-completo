@@ -76,8 +76,12 @@ public class AuthenticationService {
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        return issueToken(auth.getName(), roles);
+    }
+
+    private User issueToken(String username, List<String> roles) {
         String token = Jwts.builder()
-                .subject(auth.getName())
+                .subject(username)
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plus(tokenTTL)))
                 .notBefore(Date.from(Instant.now()))
@@ -85,7 +89,7 @@ public class AuthenticationService {
                 .signWith(keyPair.getPrivate())
                 .compact();
 
-        return new User(user.userID(), null, null, null, null, null, token, new HashSet<>(roles));
+        return new User(username, null, null, null, null, null, token, new HashSet<>(roles));
     }
 
     public User login(String refreshToken) throws InvalidRefreshTokenException {
@@ -94,7 +98,7 @@ public class AuthenticationService {
         if (token.isPresent()) {
             var user = userRepository.findByUserID(token.get().getUser()).orElseThrow(() -> new UsernameNotFoundException(token.get().getUser()));
 
-            return login(User.from(user));
+            return issueToken(user.getUserID(), user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
         }
 
         throw new InvalidRefreshTokenException(refreshToken);

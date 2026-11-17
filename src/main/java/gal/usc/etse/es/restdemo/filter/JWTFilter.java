@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -50,8 +51,9 @@ public class JWTFilter extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (JwtException e) {
-            // Gdy token wygasł lub jest niepoprawny: czyścimy autoryzację i nie rzucamy błędem 500
+        } catch (JwtException | AuthenticationException e) {
+            // Token caducado, mal formado ou dun usuario xa borrado: a petición continúa como anónima
+            // e, se o recurso require autenticación, Spring Security responde 401.
             SecurityContextHolder.clearContext();
         }
 

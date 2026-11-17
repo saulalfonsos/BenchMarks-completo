@@ -28,41 +28,34 @@ import org.springframework.http.HttpHeaders;
 
 @OpenAPIDefinition(
         info = @Info(
-                title = "REST API de exemplo",
-                description = "REST API de exemplo para Enxeñaria de Servizos",
-                summary = """
-                            Esta é unha API de exemplo para Enxeñaria de servizos.
-                            Todos os endpoits son de mentira, e o seu obxectivo e amosarvos
-                            un exemplo de como desenvolver unha API con Spring Boot
+                title = "BenchMarks API",
+                description = """
+                        API REST para descubrir, valorar e compartir bancos públicos para sentar (un "Letterboxd" de bancos).
+
+                        * Autenticación con JWT: `POST /auth/login` devolve o token na cabeceira `Authorization`.
+                        * As coleccións devolven HAL (`application/hal+json`) con ligazóns de navegación e paxinación (`page`, `size`, `sort=campo,desc`).
+                        * As modificacións parciais usan JSON-Patch (`application/json-patch+json`).
+                        * Os erros devólvense como Problem Details (RFC 9457).
                         """,
-                contact = @Contact(
-                        name = "Victor Gallego",
-                        email = "victorjose.gallego@usc.gal"
-                ),
+                summary = "API REST de BenchMarks (Enxeñaría de Servizos, USC)",
+                contact = @Contact(name = "Equipo BenchMarks"),
                 license = @License(
                         name = "Apache 2.0",
                         identifier = "Apache-2.0",
                         url = "https://spdx.org/licenses/Apache-2.0.html"
                 ),
-                version = "0.1.0"
+                version = "1.0.0"
         ),
         servers = {
                 @Server(
                         url = "http://localhost:18080",
                         description = "API para desenvolvemento"
-                ),
-                @Server(
-                        url = "https://api.example.app",
-                        description = "API de produción"
                 )
         },
         security = {
                 @SecurityRequirement(
                         name = "jwt"
-                ),
-                @SecurityRequirement(
-                        name = "refresh"
-                ),
+                )
         }
 )
 public class OASConfiguration {
