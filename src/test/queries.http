@@ -1,41 +1,183 @@
-### Admin login
-POST http://localhost:8080/auth/login
+### Peticións de exemplo para o cliente HTTP de IntelliJ / VS Code (REST Client).
+### Executar en orde: os logins gardan os tokens en variables globais.
+
+@host = http://localhost:18080
+
+### 1. Login como user (o JWT chega na cabeceira Authorization)
+POST {{host}}/auth/login
 Content-Type: application/json
 
-{
-  "username": "admin",
-  "password": "1234"
-}
+{ "username": "user", "password": "1234" }
+
+> {% client.global.set("user_token", response.headers.valueOf("Authorization")); %}
+
+### 2. Login como admin
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{ "username": "admin", "password": "1234" }
 
 > {% client.global.set("admin_token", response.headers.valueOf("Authorization")); %}
 
-### Get all books as admin
-GET http://localhost:8080/books
-    ?size=3
-Accept: application/hal+json
-Authorization: {{admin_token}}
+### 3. Rexistro (201 + Location). Repetilo devolve 409
+POST {{host}}/auth/register
+Content-Type: application/json
 
-### Get a book as admin
-GET http://localhost:8080/books/978-0544003415
-Accept: application/hal+json
-Authorization: {{admin_token}}
+{ "userID": "lucia", "name": "Lucía", "password": "segredo" }
 
-### Get all users as admin v0
-GET http://localhost:8080/users
-Accept: application/json
-Authorization: {{admin_token}}
-API-Version: 0
+### 4. Renovar o JWT co refresh token da cookie (non precisa JWT)
+POST {{host}}/auth/refresh
 
-### Get all users as admin v1
-GET http://localhost:8080/users
-Accept: application/json
-Authorization: {{admin_token}}
+### 5. Bancos mellor valorados (HAL paxinado con ligazóns first/next/last)
+GET {{host}}/benches?size=5&sort=averageMark,desc
+Authorization: {{user_token}}
+
+### 6. Busca combinada: texto + tipo + nota mínima
+GET {{host}}/benches?q=parque&type=Wooden&minMark=7
+Authorization: {{user_token}}
+
+### 7. Busca xeográfica: bancos a menos de 500 m da Catedral
+GET {{host}}/benches?lat=42.8805&lon=-8.5456&radius=0.5
+Authorization: {{user_token}}
+
+### 8. Un banco (fixarse na cabeceira ETag)
+GET {{host}}/benches/1
+Authorization: {{user_token}}
+
+> {% client.global.set("etag", response.headers.valueOf("ETag")); %}
+
+### 9. Petición condicional → 304 Not Modified
+GET {{host}}/benches/1
+Authorization: {{user_token}}
+If-None-Match: {{etag}}
+
+### 10. Crear un banco (o propietario é o usuario autenticado)
+POST {{host}}/benches
+Authorization: {{user_token}}
+Content-Type: application/json
+
+{
+  "name": "Banco da Praza do Toural",
+  "description": "Xunto á fonte",
+  "latitude": 42.8786,
+  "longitude": -8.5455,
+  "type": "Stone",
+  "covered": false
+}
+
+> {% client.global.set("bench", response.body.benchID); %}
+
+### 11. Modificar con JSON-Patch (só propietario ou admin)
+PATCH {{host}}/benches/{{bench}}
+Authorization: {{user_token}}
+Content-Type: application/json-patch+json
+
+[
+  { "op": "replace", "path": "/description", "value": "Xunto á fonte, ao sol pola tarde" },
+  { "op": "replace", "path": "/covered", "value": false }
+]
+
+### 12. JSON-Patch que deixa o recurso inválido → 400 con lista de erros
+PATCH {{host}}/benches/{{bench}}
+Authorization: {{user_token}}
+Content-Type: application/json-patch+json
+
+[ { "op": "replace", "path": "/latitude", "value": 123 } ]
+
+### 13. Predición de sombra por horas (posición solar + Open-Meteo)
+GET {{host}}/benches/1/shade?from=8&to=20
+Authorization: {{user_token}}
+
+### 14. Banco cuberto: sempre á sombra
+GET {{host}}/benches/4/shade
+Authorization: {{user_token}}
+
+### 15. Valorar un banco (a media recalcúlase en segundo plano)
+POST {{host}}/benches/{{bench}}/reviews
+Authorization: {{user_token}}
+Content-Type: application/json
+
+{ "mark": 8, "note": "Moi agradable" }
+
+> {% client.global.set("review", response.body.reviewID); %}
+
+### 16. Valorar de novo → 409 con Location da valoración existente
+POST {{host}}/benches/{{bench}}/reviews
+Authorization: {{user_token}}
+Content-Type: application/json
+
+{ "mark": 2 }
+
+### 17. Ver a media actualizada
+GET {{host}}/benches/{{bench}}
+Authorization: {{user_token}}
+
+### 18. Modificar a valoración propia
+PATCH {{host}}/reviews/{{review}}
+Authorization: {{user_token}}
+Content-Type: application/json-patch+json
+
+[ { "op": "replace", "path": "/mark", "value": 9 } ]
+
+### 19. Comentar un banco
+POST {{host}}/benches/1/comments
+Authorization: {{user_token}}
+Content-Type: application/json
+
+{ "text": "Alguén sabe se o arranxaron?" }
+
+### 20. Subir unha foto (multipart)
+POST {{host}}/benches/{{bench}}/photos
+Authorization: {{user_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="banco.jpg"
+Content-Type: image/jpeg
+
+< ../main/resources/static/img/img7.jpg
+--boundary--
+
+### 21. Fotos dun banco
+GET {{host}}/benches/1/photos
+Authorization: {{user_token}}
+
+### 22. Descargar a miniatura (pública, con Cache-Control)
+GET {{host}}/photos/1/content?thumbnail=true
+
+### 23. Gardar un banco na lista (idempotente)
+PUT {{host}}/users/user/favorites/2
+Authorization: {{user_token}}
+
+### 24. Like (un por usuario)
+PUT {{host}}/users/user/likes/2
+Authorization: {{user_token}}
+
+### 25. Lista de bancos gardados
+GET {{host}}/users/user/favorites
+Authorization: {{user_token}}
+
+### 26. Usuarios v1 (paxinado, por defecto)
+GET {{host}}/users
+Authorization: {{user_token}}
 API-Version: 1
 
-### Admin logout
-POST http://localhost:8080/auth/logout
+### 27. Usuarios v0 (lista sen paxinar)
+GET {{host}}/users
+Authorization: {{user_token}}
+API-Version: 0
+
+### 28. Modificar o perfil doutro usuario → 403
+PATCH {{host}}/users/admin
+Authorization: {{user_token}}
+Content-Type: application/json-patch+json
+
+[ { "op": "replace", "path": "/name", "value": "Hacker" } ]
+
+### 29. O admin pode borrar calquera banco
+DELETE {{host}}/benches/{{bench}}
 Authorization: {{admin_token}}
 
-### Admin refresh
-POST http://localhost:8080/auth/refresh
-Authorization: {{admin_token}}
+### 30. Pechar sesión (invalida os refresh tokens)
+POST {{host}}/auth/logout
+Authorization: {{user_token}}
