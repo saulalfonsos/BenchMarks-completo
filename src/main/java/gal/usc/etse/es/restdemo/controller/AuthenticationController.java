@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.groups.Default;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.web.server.Cookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -76,11 +77,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("logout")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(summary = "Pechar sesión", description = "Invalida todos os refresh tokens do usuario.")
-    public ResponseEntity<Void> logout(@RequestHeader(name = HttpHeaders.AUTHORIZATION) String token) {
-        User user = authentication.parseJWT(token.replaceFirst("^Bearer ", ""));
-        authentication.invalidateTokens(user.userID());
+    @SecurityRequirements
+    @Operation(summary = "Pechar sesión",
+            description = "Invalida todos os refresh tokens do usuario e borra a cookie. O usuario identifícase polo refresh token da cookie "
+                    + "ou, na súa falta, polo JWT, de modo que funciona aínda que o JWT xa caducase.")
+    public ResponseEntity<Void> logout(@CookieValue(name = REFRESH_TOKEN_COOKIE_NAME, required = false) @Nullable String refreshToken,
+                                       @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) @Nullable String token) {
+        authentication.logout(refreshToken, token == null ? null : token.replaceFirst("^Bearer ", ""));
         ResponseCookie cookie = refreshCookie("", Duration.ZERO);
 
         return ResponseEntity.noContent()

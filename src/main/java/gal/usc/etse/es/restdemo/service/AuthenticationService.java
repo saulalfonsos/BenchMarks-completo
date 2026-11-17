@@ -1,5 +1,6 @@
 package gal.usc.etse.es.restdemo.service;
 
+import org.jspecify.annotations.Nullable;
 import gal.usc.etse.es.restdemo.exception.InvalidRefreshTokenException;
 import gal.usc.etse.es.restdemo.model.entity.RefreshToken;
 import gal.usc.etse.es.restdemo.model.dto.User;
@@ -60,6 +61,7 @@ public class AuthenticationService {
     }
 
     @Retryable(
+            excludes = AuthenticationException.class, // as credenciais incorrectas non se reintentan
             maxRetries = 3,
             delay = 300,
             jitter = 50,
@@ -111,6 +113,22 @@ public class AuthenticationService {
         refreshTokenRepository.save(refreshToken);
 
         return refreshToken.getToken();
+    }
+
+    /** Pecha a sesión do usuario identificado polo refresh token ou, se non hai, polo JWT (aínda que caducase non se acepta). */
+    public void logout(@Nullable String refreshToken, @Nullable String jwt) {
+        String username = null;
+        if (refreshToken != null) {
+            username = refreshTokenRepository.findByToken(refreshToken).map(RefreshToken::getUser).orElse(null);
+        }
+        if (username == null && jwt != null) {
+            try {
+                username = parseJWT(jwt).userID();
+            } catch (JwtException | AuthenticationException e) {
+                // token inválido: non hai ningunha sesión que pechar
+            }
+        }
+        if (username != null) invalidateTokens(username);
     }
 
     public void invalidateTokens(String username) {

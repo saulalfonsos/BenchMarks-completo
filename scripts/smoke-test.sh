@@ -59,6 +59,8 @@ check "JSON-Patch do propietario → 200" 200 -X PATCH "${AN[@]}" "${PATCH[@]}" 
 [[ "$(body | jq -r '.name')" == "Banco renomeado" ]] && echo "  ok   patch aplicado" || { echo "  FAIL patch"; FAIL=$((FAIL+1)); }
 check "JSON-Patch con valor non válido → 400" 400 -X PATCH "${AN[@]}" "${PATCH[@]}" "$B/benches/$BID" -d '[{"op":"replace","path":"/latitude","value":200}]'
 check "JSON-Patch con tipo incorrecto → 422" 422 -X PATCH "${AN[@]}" "${PATCH[@]}" "$B/benches/$BID" -d '[{"op":"replace","path":"/latitude","value":"norte"}]'
+check "JSON-Patch con ruta inexistente → 422" 422 -X PATCH "${AN[@]}" "${PATCH[@]}" "$B/benches/$BID" -d '[{"op":"replace","path":"/nonexistent","value":1}]'
+check "JSON-Patch con ruta baleira → 422" 422 -X PATCH "${AN[@]}" "${PATCH[@]}" "$B/benches/$BID" -d '[{"op":"remove","path":""}]'
 check "JSON-Patch doutro usuario → 403" 403 -X PATCH "${AU[@]}" "${PATCH[@]}" "$B/benches/$BID" -d '[{"op":"replace","path":"/name","value":"x"}]'
 check "Content-Type non soportado → 415" 415 -X PATCH "${AN[@]}" "${JSON[@]}" "$B/benches/$BID" -d '{}'
 
@@ -103,6 +105,8 @@ echo "== Fotos"
 IMG=$(dirname "$0")/../src/main/resources/static/img/img1.jpg
 check "subir foto → 201" 201 -X POST "${AN[@]}" -F "file=@$IMG;type=image/jpeg" "$B/benches/$BID/photos"
 PID=$(body | jq '.photoID')
+python3 -c "import struct,zlib;d=lambda t,b:struct.pack('>I',len(b))+t+b+struct.pack('>I',zlib.crc32(t+b));open('$TMP/bomb.png','wb').write(b'\x89PNG\r\n\x1a\n'+d(b'IHDR',struct.pack('>IIBBBBB',30000,30000,8,2,0,0,0))+d(b'IDAT',zlib.compress(b''))+d(b'IEND',b''))"
+check "imaxe con dimensións enormes → 415" 415 -X POST "${AN[@]}" -F "file=@$TMP/bomb.png;type=image/png" "$B/benches/$BID/photos"
 check "subir ficheiro que non é imaxe → 415" 415 -X POST "${AN[@]}" -F "file=@$0;type=image/jpeg" "$B/benches/$BID/photos"
 check "fotos do banco" 200 "${AU[@]}" "$B/benches/$BID/photos"
 check "descargar imaxe sen token (pública)" 200 "$B/photos/$PID/content"
@@ -114,8 +118,10 @@ check "borrar foto allea → 403" 403 -X DELETE "${AU[@]}" "$B/photos/$PID"
 check "borrar foto propia → 204" 204 -X DELETE "${AN[@]}" "$B/photos/$PID"
 
 echo "== Usuarios, favoritos e likes"
-check "perfil público (sen contrasinal)" 200 "${AU[@]}" "$B/users/user"
-[[ "$(body | jq -r '.password // "oculto"')" == oculto ]] && echo "  ok   contrasinal oculto" || { echo "  FAIL contrasinal visible"; FAIL=$((FAIL+1)); }
+for url in "$B/users/user" "$B/users" ; do
+  curl -s "${AU[@]}" "$url" | grep -q '"password"' && { echo "  FAIL contrasinal visible en $url"; FAIL=$((FAIL+1)); } || echo "  ok   sen contrasinal en $url"
+done
+check "perfil público" 200 "${AU[@]}" "$B/users/user"
 check "usuario inexistente → 404" 404 "${AU[@]}" "$B/users/ninguen"
 check "listar usuarios v1 (paxinado)" 200 "${AU[@]}" -H 'API-Version: 1' "$B/users"
 check "listar usuarios v0 (lista)" 200 "${AU[@]}" -H 'API-Version: 0' "$B/users"
@@ -134,16 +140,24 @@ LIKES=$(curl -s "${AU[@]}" "$B/benches/2" | jq '.likes')
 check "like → 204" 204 -X PUT "${AN[@]}" "$B/users/$NEW/likes/2"
 check "like repetido → 204" 204 -X PUT "${AN[@]}" "$B/users/$NEW/likes/2"
 [[ "$(curl -s "${AU[@]}" "$B/benches/2" | jq '.likes')" == $((LIKES+1)) ]] && echo "  ok   o contador sobe só unha vez (caché invalidada)" || { echo "  FAIL contador likes"; FAIL=$((FAIL+1)); }
+[[ "$(curl -s "${AU[@]}" "$B/benches/3" | jq '.likes')" == 0 ]] && echo "  ok   o like non afecta a outros bancos" || { echo "  FAIL likes doutro banco"; FAIL=$((FAIL+1)); }
 check "quitar like → 204" 204 -X DELETE "${AN[@]}" "$B/users/$NEW/likes/2"
 
 echo "== Borrados e cascada"
 check "borrar banco alleo → 403" 403 -X DELETE "${AU[@]}" "$B/benches/$BID"
 check "borrar banco propio → 204" 204 -X DELETE "${AN[@]}" "$B/benches/$BID"
 check "valoración borrada en cascada → 404" 404 "${AU[@]}" "$B/reviews/$RID"
+check "valorar o banco 3 antes de borrar a conta" 201 -X POST "${AN[@]}" "${JSON[@]}" "$B/benches/3/reviews" -d '{"mark":0}'
+sleep 1; COUNT=$(curl -s "${AU[@]}" "$B/benches/3" | jq '.reviewCount')
 check "borrar a propia conta → 204" 204 -X DELETE "${AN[@]}" "$B/users/$NEW"
+sleep 1
+[[ "$(curl -s "${AU[@]}" "$B/benches/3" | jq '.reviewCount')" == $((COUNT-1)) ]] && echo "  ok   media recalculada ao borrar o usuario" || { echo "  FAIL media tras borrar usuario"; FAIL=$((FAIL+1)); }
 check "token dun usuario borrado → 401" 401 "${AN[@]}" "$B/benches"
 check "logout → 204" 204 -X POST "${AU[@]}" "$B/auth/logout"
 check "refresh tras logout → 401" 401 -X POST "$B/auth/refresh" -b "$TMP/cookies-user"
+login ana 1234 >/dev/null
+check "logout só coa cookie (JWT caducado) → 204" 204 -X POST "$B/auth/logout" -b "$TMP/cookies-ana"
+check "refresh tras logout con cookie → 401" 401 -X POST "$B/auth/refresh" -b "$TMP/cookies-ana"
 
 echo "== Documentación"
 check "OpenAPI" 200 "$B/docs/oas"

@@ -1,16 +1,19 @@
 package gal.usc.etse.es.restdemo.service;
 
+import gal.usc.etse.es.restdemo.event.ReviewChangedEvent;
 import gal.usc.etse.es.restdemo.exception.DuplicateUserException;
 import gal.usc.etse.es.restdemo.exception.ResourceNotFoundException;
 import gal.usc.etse.es.restdemo.model.dto.Bench;
 import gal.usc.etse.es.restdemo.model.dto.User;
 import gal.usc.etse.es.restdemo.repository.BenchRepository;
 import gal.usc.etse.es.restdemo.repository.RefreshTokenRepository;
+import gal.usc.etse.es.restdemo.repository.ReviewRepository;
 import gal.usc.etse.es.restdemo.repository.RoleRepository;
 import gal.usc.etse.es.restdemo.repository.UserRepository;
 import gal.usc.etse.es.utils.patch.JsonPatchOperation;
 import org.jspecify.annotations.NullMarked;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,10 +32,15 @@ public class UserService implements UserDetailsService {
     private final BenchRepository benchRepository;
     private final RefreshTokenRepository refreshTokens;
     private final PasswordEncoder passwordEncoder;
+    private final ReviewRepository reviewRepository;
     private final Patcher patcher;
+    private final ApplicationEventPublisher events;
 
     public UserService(UserRepository userRepository, RoleRepository roleRepository, BenchRepository benchRepository,
-                       RefreshTokenRepository refreshTokens, PasswordEncoder passwordEncoder, Patcher patcher) {
+                       ReviewRepository reviewRepository, RefreshTokenRepository refreshTokens, PasswordEncoder passwordEncoder,
+                       Patcher patcher, ApplicationEventPublisher events) {
+        this.reviewRepository = reviewRepository;
+        this.events = events;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.benchRepository = benchRepository;
@@ -115,12 +123,18 @@ public class UserService implements UserDetailsService {
                 .setLocation(changes.location());
     }
 
-    /** Borra o usuario (as súas valoracións, comentarios e fotos bórranse en cascada) e invalida as súas sesións. */
+    /**
+     * Borra o usuario (as súas valoracións, comentarios e fotos bórranse en cascada na base de datos),
+     * invalida as súas sesións e solicita o recálculo das notas dos bancos que valorara.
+     */
     @Transactional
     @CacheEvict(cacheNames = BenchService.CACHE, allEntries = true)
     public void delete(String userID) {
-        userRepository.delete(find(userID));
+        var user = find(userID);
+        List<Long> reviewedBenches = reviewRepository.findReviewedBenchIDs(userID);
+        userRepository.delete(user);
         refreshTokens.deleteAllByUser(userID);
+        reviewedBenches.forEach(benchID -> events.publishEvent(new ReviewChangedEvent(benchID)));
     }
 
     // --- Lista de bancos gardados (favoritos) ---

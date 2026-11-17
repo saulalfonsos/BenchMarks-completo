@@ -98,7 +98,7 @@ public class PhotoController {
         var content = photos.getContent(id, thumbnail);
         return ResponseEntity.ok()
                 .contentType(content.mediaType())
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
+                .cacheControl(content.provisional() ? CacheControl.noCache() : CacheControl.maxAge(Duration.ofDays(1)).cachePublic())
                 .body(content.bytes());
     }
 

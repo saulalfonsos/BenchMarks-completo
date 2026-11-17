@@ -18,17 +18,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 @Service
 @NullMarked
 public class PhotoService {
     private static final Logger log = LoggerFactory.getLogger(PhotoService.class);
     private static final int THUMBNAIL_WIDTH = 320;
+    /** Límite de píxeles: evita que unha imaxe pequena comprimida declare dimensións enormes e esgote a memoria ao decodificala. */
+    private static final long MAX_PIXELS = 40_000_000L;
+    private static final int MAX_SIDE = 12_000;
 
     private final PhotoRepository photos;
     private final BenchRepository benches;
@@ -42,8 +48,11 @@ public class PhotoService {
         this.events = events;
     }
 
-    /** Binario dunha foto xunto co seu tipo MIME. */
-    public record Content(byte[] bytes, MediaType mediaType) {}
+    /**
+     * Binario dunha foto xunto co seu tipo MIME.
+     * @param provisional pediuse a miniatura pero aínda non está xerada e devólvese a orixinal (non debe cachearse)
+     */
+    public record Content(byte[] bytes, MediaType mediaType, boolean provisional) {}
 
     /**
      * Garda unha foto para un banco. O tipo detéctase polos bytes (non se confía na cabeceira do cliente)
@@ -80,9 +89,9 @@ public class PhotoService {
     public Content getContent(Long id, boolean thumbnail) {
         var photo = photos.findById(id).orElseThrow(() -> new ResourceNotFoundException("Photo", id));
         if (thumbnail && photo.getThumbnail() != null) {
-            return new Content(photo.getThumbnail(), MediaType.IMAGE_JPEG);
+            return new Content(photo.getThumbnail(), MediaType.IMAGE_JPEG, false);
         }
-        return new Content(photo.getData(), MediaType.parseMediaType(photo.getContentType()));
+        return new Content(photo.getData(), MediaType.parseMediaType(photo.getContentType()), thumbnail);
     }
 
     @Transactional
@@ -131,6 +140,23 @@ public class PhotoService {
     }
 
     private static BufferedImage decode(byte[] bytes) {
+        try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) throw new InvalidPhotoException("The file is not a readable image");
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(input, true, true);
+                // Só se le a cabeceira: compróbanse as dimensións antes de reservar memoria para os píxeles
+                int width = reader.getWidth(0), height = reader.getHeight(0);
+                if (width > MAX_SIDE || height > MAX_SIDE || (long) width * height > MAX_PIXELS) {
+                    throw new InvalidPhotoException("Image too large: " + width + "x" + height + " (maximum 40 megapixels)");
+                }
+            } finally {
+                reader.dispose();
+            }
+        } catch (IOException e) {
+            throw new InvalidPhotoException("The file is not a readable image");
+        }
         try {
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(bytes));
             if (image == null) throw new InvalidPhotoException("The file is not a readable image");

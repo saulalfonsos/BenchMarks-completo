@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
 import java.io.Serializable;
+import java.time.DateTimeException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -26,7 +29,11 @@ public class WeatherService {
     static final int MAX_DAYS_AHEAD = 15;
     static final int MAX_DAYS_BEHIND = 60;
 
+    /** Tras un fallo do servizo externo non se volve chamar durante este tempo (circuit breaker simple). */
+    static final Duration OPEN_CIRCUIT = Duration.ofSeconds(60);
+
     private final OpenMeteoClient client;
+    private volatile Instant circuitOpenUntil = Instant.MIN;
 
     public WeatherService(OpenMeteoClient client) {
         this.client = client;
@@ -45,11 +52,15 @@ public class WeatherService {
         if (date.isAfter(today.plusDays(MAX_DAYS_AHEAD)) || date.isBefore(today.minusDays(MAX_DAYS_BEHIND))) {
             return Optional.empty();
         }
+        if (Instant.now().isBefore(circuitOpenUntil)) {
+            return Optional.empty();
+        }
         try {
             Map<Integer, Integer> values = client.hourlyCloudCover(latitude, longitude, date, zone);
             return Optional.of(new CloudCover(new HashMap<>(values)));
-        } catch (RestClientException e) {
-            log.warn("Weather service unavailable, falling back to astronomical shade: {}", e.getMessage());
+        } catch (RestClientException | DateTimeException e) {
+            circuitOpenUntil = Instant.now().plus(OPEN_CIRCUIT);
+            log.warn("Weather service unavailable, falling back to astronomical shade for {}s: {}", OPEN_CIRCUIT.toSeconds(), e.getMessage());
             return Optional.empty();
         }
     }

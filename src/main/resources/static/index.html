@@ -255,11 +255,15 @@ async function problemMessage(r) {
   } catch { return 'HTTP ' + r.status; }
 }
 
-async function refreshToken() {
-  const r = await fetch('/auth/refresh', { method: 'POST', credentials: 'same-origin' });
-  if (!r.ok) return false;
-  setToken(r.headers.get('Authorization').replace(/^Bearer /i, ''));
-  return true;
+// O refresh token rótase en cada uso: as peticións que reciben 401 á vez comparten unha única renovación
+let refreshing = null;
+function refreshToken() {
+  return refreshing ??= (async () => {
+    const r = await fetch('/auth/refresh', { method: 'POST', credentials: 'same-origin' });
+    if (!r.ok) return false;
+    setToken(r.headers.get('Authorization').replace(/^Bearer /i, ''));
+    return true;
+  })().finally(() => { refreshing = null; });
 }
 
 /** Cliente da API: engade o JWT, renova o token unha vez se caduca e lanza Error co detalle do problema. */
@@ -270,9 +274,10 @@ async function api(path, { method = 'GET', body, patch, form, retry = true } = {
   if (form) payload = form;
   else if (patch) { headers['Content-Type'] = 'application/json-patch+json'; payload = JSON.stringify(patch); }
   else if (body !== undefined) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
+  const sent = token();
   const r = await fetch(path, { method, headers, body: payload, credentials: 'same-origin' });
-  if (r.status === 401 && retry && await refreshToken()) return api(path, { method, body, patch, form, retry: false });
-  if (r.status === 401) { clearToken(); showLogin(); throw new Error('A sesión caducou'); }
+  if (r.status === 401 && retry && (token() !== sent || await refreshToken())) return api(path, { method, body, patch, form, retry: false });
+  if (r.status === 401) { if (token() === sent) { clearToken(); showLogin(); } throw new Error('A sesión caducou'); }
   if (!r.ok) throw new Error(await problemMessage(r));
   if (r.status === 204) return null;
   return r.json();
@@ -310,7 +315,11 @@ $('registerForm').onsubmit = async e => {
     await doLogin(user.userID, user.password);
   } catch (err) { $('loginMsg').textContent = err.message; }
 };
-$('logoutBtn').onclick = async () => { try { await api('/auth/logout', { method: 'POST', retry: false }); } catch {} clearToken(); showLogin(); };
+$('logoutBtn').onclick = async () => {
+  // o servidor identifica a sesión pola cookie do refresh token, aínda que o JWT caducase
+  try { await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin', headers: token() ? { Authorization: 'Bearer ' + token() } : {} }); } catch {}
+  clearToken(); showLogin();
+};
 
 function showLogin() { $('loginView').classList.remove('hidden'); $('appView').classList.add('hidden'); }
 function showApp() {

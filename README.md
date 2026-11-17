@@ -32,7 +32,7 @@ Usuarios de prueba (contraseña `1234`): `user`, `ana`, `brais` (rol USER) y `ad
 
 ```bash
 ./gradlew test                 # tests unitarios (no necesitan Docker)
-./scripts/smoke-test.sh        # 76 comprobaciones end-to-end contra la API arrancada (requiere curl y jq)
+./scripts/smoke-test.sh        # 82 comprobaciones end-to-end contra la API arrancada (requiere curl y jq)
 ```
 
 `src/test/queries.http` tiene una petición de ejemplo para cada funcionalidad, lista para lanzar desde IntelliJ o VS Code.
@@ -46,8 +46,8 @@ Usuarios de prueba (contraseña `1234`): `user`, `ana`, `brais` (rol USER) y `ad
 | Búsqueda y filtrado | `GET /benches?q=&type=&covered=&minMark=&owner=&lat=&lon=&radius=&sort=&page=&size=` |
 | Valorar banco | `GET/POST /benches/{id}/reviews`, `GET/PATCH/DELETE /reviews/{id}`, `GET /reviews`, `GET /users/{id}/reviews` |
 | Añadir comentarios | `GET/POST /benches/{id}/comments`, `GET/PATCH/DELETE /comments/{id}` |
-| Subida de fotos | `GET/POST /benches/{id}/photos` (multipart), `GET/DELETE /photos/{id}`, `GET /photos/{id}/content[?thumbnail=true]` |
-| Añadir a la lista (guardados) | `GET /users/{id}/favorites`, `PUT/DELETE /users/{id}/favorites/{benchId}` |
+| Subida de fotos (JPEG/PNG, máx. 5 MB y 40 megapíxeles) | `GET/POST /benches/{id}/photos` (multipart), `GET/DELETE /photos/{id}`, `GET /photos/{id}/content[?thumbnail=true]` |
+| Añadir a la lista (guardados, públicos como en Letterboxd) | `GET /users/{id}/favorites`, `PUT/DELETE /users/{id}/favorites/{benchId}` |
 | Likes | `GET /users/{id}/likes`, `PUT/DELETE /users/{id}/likes/{benchId}` |
 | Saber si hay sombra en un intervalo de horas | `GET /benches/{id}/shade?date=&from=&to=` |
 | Perfil | `GET /users`, `GET/PUT/PATCH/DELETE /users/{id}` |
@@ -85,12 +85,12 @@ Si Open-Meteo no responde, o la fecha cae fuera de su rango (unos 60 días atrá
 | Paginación y consultas avanzadas | `Pageable` estándar (`page`, `size`, `sort=campo,desc`), con 400 si el campo de ordenación no existe. Búsqueda dinámica con JPA Specifications. Proyecciones JPQL a DTO para no cargar los binarios de las fotos. `@Formula` para el contador de likes. | `repository/*` |
 | Serialización con Jackson | `@JsonView`: la contraseña nunca sale en respuestas (vista `Public`). Campos de solo lectura documentados en el esquema. | `model/dto/User` |
 | Versionado | Cabecera `API-Version` (o `?version=`): `GET /users` v0 devuelve una lista, v1 (por defecto) una página HAL. Una versión desconocida da 400. | `APIConfiguration`, `UserController` |
-| Seguridad | JWT firmado con RSA, refresh token rotatorio en cookie `HttpOnly`/`Secure`/`SameSite=Strict` guardado en Redis. Permisos por recurso en la BD (`benches:update`...) con jerarquía de roles, más reglas de propiedad en `@PreAuthorize` (el autor o el propietario puede modificar; el admin, todo). El autor de una valoración o comentario sale siempre del token, nunca del cuerpo. | `SecurityConfiguration`, `auth.sql`, `*Service.canModify` |
+| Seguridad | JWT firmado con RSA, refresh token rotatorio en cookie `HttpOnly`/`Secure`/`SameSite=Strict` guardado en Redis; el logout lo revoca aunque el JWT ya haya caducado. Permisos por recurso en la BD (`benches:update`...) con jerarquía de roles, más reglas de propiedad en `@PreAuthorize` (el autor o el propietario puede modificar; el admin, todo). El autor de una valoración o comentario sale siempre del token, nunca del cuerpo. | `SecurityConfiguration`, `auth.sql`, `*Service.canModify` |
 | Cachés | Servidor: Redis, con TTL por caché (bancos 10 min, meteorología 1 h); `@Cacheable`/`@CacheEvict` invalidan al modificar, dar like o recalcular medias. HTTP: `ETag` + `If-None-Match` → 304 y `Cache-Control` en las imágenes. | `CacheConfiguration`, `BenchService`, `WeatherService` |
 | Transacciones | `@Transactional(readOnly = true)` en lecturas; las escrituras son atómicas. El recálculo de medias corre en una transacción nueva (`REQUIRES_NEW`) solo después del commit. | servicios, `event/RatingUpdater` |
 | Eventos y tareas asíncronas | `ReviewChangedEvent` → `@TransactionalEventListener(AFTER_COMMIT)` + `@Async` recalcula la media. `PhotoUploadedEvent` genera la miniatura en segundo plano, así que el 201 llega sin esperar. | `event/*` |
 | Tareas programadas | `@Scheduled` cada noche (04:00, Europe/Madrid) reconcilia las medias de todos los bancos | `event/RatingUpdater` |
-| Resiliencia | Cliente de Open-Meteo con timeouts, `@Retryable` con backoff exponencial, `@ConcurrencyLimit` y fallback a cálculo astronómico | `shade/OpenMeteoClient`, `shade/WeatherService` |
+| Resiliencia | Cliente de Open-Meteo con timeouts, `@Retryable` con backoff exponencial, `@ConcurrencyLimit`, circuit breaker de 60 s tras un fallo y fallback a cálculo astronómico. El login no reintenta credenciales incorrectas. | `shade/OpenMeteoClient`, `shade/WeatherService` |
 | Documentación OpenAPI | Tags, resúmenes y descripciones por operación, parámetros con ejemplos, errores globales documentados, esquema de seguridad JWT | `OASConfiguration`, anotaciones en controladores |
 
 ### Modelo de datos

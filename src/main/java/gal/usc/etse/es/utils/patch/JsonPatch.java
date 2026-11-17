@@ -11,6 +11,17 @@ import java.util.Optional;
 public class JsonPatch {
     public static JsonNode apply(List<JsonPatchOperation> patchOperations, JsonNode rootDocument) throws JsonPatchFailedException {
         for (JsonPatchOperation instruction : patchOperations) {
+            if (instruction.operation() == null || instruction.path() == null || instruction.path().matches()) {
+                throw new JsonPatchFailedException("Each operation needs a valid 'op' and a non-empty 'path'");
+            }
+            switch (instruction.operation()) {
+                case REMOVE, REPLACE -> requireExisting(instruction.path(), rootDocument);
+                case COPY, MOVE -> {
+                    if (instruction.from() == null) throw new JsonPatchFailedException("'" + instruction.operation() + "' needs 'from'");
+                    requireExisting(instruction.from(), rootDocument);
+                }
+                case ADD -> requireExisting(instruction.path().head(), rootDocument);
+            }
             rootDocument = switch (instruction.operation()) {
                 case ADD -> add(instruction.path(), instruction.value(), rootDocument);
                 case REMOVE -> remove(instruction.path(), rootDocument);
@@ -20,6 +31,13 @@ public class JsonPatch {
             };
         }
         return rootDocument;
+    }
+
+    /** RFC 6902: as operacións que len ou substitúen un valor fallan se a ruta non existe. */
+    private static void requireExisting(JsonPointer path, JsonNode document) {
+        if (path == null || document.at(path).isMissingNode()) {
+            throw new JsonPatchFailedException("Path '" + path + "' does not exist in the resource");
+        }
     }
 
     public static JsonNode add(JsonPointer path, JsonNode value, JsonNode document) throws JsonPatchFailedException {
